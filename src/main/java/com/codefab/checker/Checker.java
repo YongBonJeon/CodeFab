@@ -35,6 +35,11 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         scope.put(name.origin, Boolean.FALSE);
     }
 
+    private void define(Token name) {
+        if (scopes.isEmpty()) return;
+        scopes.peek().put(name.origin, Boolean.TRUE);
+    }
+
     @Override
     public Void visitBlock(Stmt.Block stmt) {
         beginScope();
@@ -46,6 +51,8 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitVarDeclare(Stmt.VarDeclare stmt) {
         declare(stmt.name);
+        if (stmt.initializer != null) resolve(stmt.initializer);
+        define(stmt.name);
         return null;
     }
     @Override public Void visitExpression(Stmt.Expression stmt)   { return null; }
@@ -54,9 +61,23 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override public Void visitFor(Stmt.For stmt)                 { return null; }
 
     @Override public Void visitLiteral(Expr.Literal expr)         { return null; }
-    @Override public Void visitVariable(Expr.Variable expr)       { return null; }
+
+    @Override
+    public Void visitVariable(Expr.Variable expr) {
+        if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
+            throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
+        }
+        return null;
+    }
+
     @Override public Void visitAssign(Expr.Assign expr)           { return null; }
-    @Override public Void visitBinary(Expr.Binary expr)           { return null; }
+
+    @Override
+    public Void visitBinary(Expr.Binary expr) {
+        resolve(expr.left);
+        resolve(expr.right);
+        return null;
+    }
     @Override public Void visitUnary(Expr.Unary expr)             { return null; }
     @Override public Void visitLogical(Expr.Logical expr)         { return null; }
     @Override public Void visitGrouping(Expr.Grouping expr)       { return null; }
