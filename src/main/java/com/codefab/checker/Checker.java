@@ -104,5 +104,9 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(expr.right);
         return null;
     }
-    @Override public Void visitGrouping(Expr.Grouping expr)       { return null; }
+    @Override
+    public Void visitGrouping(Expr.Grouping expr) {
+        resolve(expr.expression);
+        return null;
+    }
 }
