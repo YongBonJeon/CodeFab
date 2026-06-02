@@ -11,6 +11,7 @@ import com.codefab.ast.BlockStmt;
 import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
+import com.codefab.ast.LogicalExpr;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -354,5 +355,57 @@ class ExecutorTest {
 
     // then
     assertEquals("20", output());
+  }
+
+  @Test
+  @DisplayName("true and true 는 true 를 반환한다")
+  void andReturnsTrueWhenBothTrue() {
+    // given
+    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(true), "and", new LiteralExpr(true)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("true", output());
+  }
+
+  @Test
+  @DisplayName("false and 는 오른쪽을 평가하지 않고 false 를 반환한다")
+  void andShortCircuitsOnFalse() {
+    // given
+    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(false), "and", new LiteralExpr(true)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("true or 는 오른쪽을 평가하지 않고 true 를 반환한다")
+  void orShortCircuitsOnTrue() {
+    // given
+    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(true), "or", new LiteralExpr(false)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("true", output());
+  }
+
+  @Test
+  @DisplayName("false or false 는 false 를 반환한다")
+  void orReturnsFalseWhenBothFalse() {
+    // given
+    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(false), "or", new LiteralExpr(false)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
   }
 }

@@ -8,6 +8,7 @@ import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
+import com.codefab.ast.LogicalExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
 import com.codefab.ast.UnaryExpr;
@@ -69,6 +70,13 @@ public class Executor {
     }
     if (expr instanceof GroupingExpr e) {
       return evaluate(e.expression);
+    }
+    if (expr instanceof LogicalExpr e) {
+      Object left = evaluate(e.left);
+      if (e.op.equals("and")) {
+        return isTruthy(left) ? evaluate(e.right) : left;
+      }
+      return isTruthy(left) ? left : evaluate(e.right);
     }
     if (expr instanceof UnaryExpr e) {
       Object right = evaluate(e.right);
