@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("application")
 }
 
 group = "org.example"
@@ -17,6 +18,29 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}
+
 tasks.test {
     useJUnitPlatform()
+    systemProperty("file.encoding", "UTF-8")
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = false
+    }
+}
+
+application {
+    mainClass.set("com.codefab.Main")
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
 }
