@@ -46,6 +46,8 @@ public class Executor {
         case "-": return left - right;
         case "*": return left * right;
         case "/": return left / right;
+        case ">": return left > right;
+        case "<": return left < right;
       }
     }
     throw new UnsupportedOperationException("Not implemented yet");

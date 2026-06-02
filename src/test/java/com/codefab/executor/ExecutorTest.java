@@ -135,4 +135,56 @@ class ExecutorTest {
     // then
     assertEquals("5", output());
   }
+
+  @Test
+  @DisplayName("왼쪽이 오른쪽보다 크면 true를 출력한다")
+  void printGreaterThanTrue() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), ">", new LiteralExpr(3.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("true", output());
+  }
+
+  @Test
+  @DisplayName("왼쪽이 오른쪽보다 작거나 같으면 false를 출력한다")
+  void printGreaterThanFalse() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), ">", new LiteralExpr(5.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("왼쪽이 오른쪽보다 작으면 true를 출력한다")
+  void printLessThanTrue() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "<", new LiteralExpr(5.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("true", output());
+  }
+
+  @Test
+  @DisplayName("왼쪽이 오른쪽보다 크거나 같으면 false를 출력한다")
+  void printLessThanFalse() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), "<", new LiteralExpr(3.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
+  }
 }
