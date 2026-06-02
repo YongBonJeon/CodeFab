@@ -77,4 +77,21 @@ class TokenizerTest {
     void singleSlashIsDivision() {
         assertThat(types("/")).containsExactly(SLASH, EOF);
     }
+
+    @Test
+    @DisplayName("정수 리터럴을 NUMBER 토큰으로 분해하고 double 값을 보관한다")
+    void tokenizesIntegerLiteral() {
+        Token number = new Tokenizer("37").tokenize().get(0);
+        assertThat(number.type).isEqualTo(NUMBER);
+        assertThat(number.origin).isEqualTo("37");
+        assertThat(number.literal).isEqualTo(37.0);
+    }
+
+    @Test
+    @DisplayName("소수점 리터럴을 하나의 NUMBER 토큰으로 분해한다")
+    void tokenizesDecimalLiteral() {
+        Token number = new Tokenizer("3.14").tokenize().get(0);
+        assertThat(number.type).isEqualTo(NUMBER);
+        assertThat(number.literal).isEqualTo(3.14);
+    }
 }

@@ -54,14 +54,32 @@ public class Tokenizer {
             case ' ': case '\r': case '\t': break;
             case '\n': line++; break;
             default:
-                throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
+                if (c >= '0' && c <= '9') {
+                    number();
+                } else {
+                    throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
+                }
         }
+    }
+
+    private void number() {
+        while (peek() >= '0' && peek() <= '9') advance();
+        if (peek() == '.' && peekNext() >= '0' && peekNext() <= '9') {
+            advance();
+            while (peek() >= '0' && peek() <= '9') advance();
+        }
+        String text = source.substring(start, current);
+        tokens.add(new Token(NUMBER, text, Double.parseDouble(text), line));
     }
 
     private char advance() { return source.charAt(current++); }
 
     private char peek() {
         return isAtEnd() ? '\0' : source.charAt(current);
+    }
+
+    private char peekNext() {
+        return current + 1 >= source.length() ? '\0' : source.charAt(current + 1);
     }
 
     private boolean match(char expected) {
