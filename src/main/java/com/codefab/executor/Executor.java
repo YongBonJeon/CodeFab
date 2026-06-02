@@ -5,6 +5,7 @@ import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.Expr;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.ForStmt;
 import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
@@ -50,6 +51,18 @@ public class Executor {
         execute(s.thenBranch);
       } else if (s.elseBranch != null) {
         execute(s.elseBranch);
+      }
+    } else if (stmt instanceof ForStmt s) {
+      Environment previous = this.environment;
+      this.environment = new Environment(previous);
+      try {
+        if (s.initializer != null) execute(s.initializer);
+        while (isTruthy(evaluate(s.condition))) {
+          execute(s.body);
+          if (s.increment != null) evaluate(s.increment);
+        }
+      } finally {
+        this.environment = previous;
       }
     } else if (stmt instanceof BlockStmt s) {
       Environment previous = this.environment;

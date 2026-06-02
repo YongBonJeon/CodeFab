@@ -9,6 +9,7 @@ import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.ForStmt;
 import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
 import com.codefab.ast.LogicalExpr;
@@ -41,7 +42,7 @@ class ExecutorTest {
   }
 
   private String output() {
-    return outputStream.toString().trim();
+    return outputStream.toString().trim().replace("\r\n", "\n");
   }
 
   @Test
@@ -407,5 +408,43 @@ class ExecutorTest {
 
     // then
     assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("for 문은 조건이 참인 동안 body 를 반복 실행한다")
+  void forLoopExecutesBodyWhileConditionIsTrue() {
+    // given
+    // for (var i = 0; i < 3; i = i + 1) { print i; }
+    Stmt forStmt = new ForStmt(
+        new VarDeclareStmt("i", new LiteralExpr(0.0)),
+        new BinaryExpr(new VariableExpr("i"), "<", new LiteralExpr(3.0)),
+        new AssignExpr("i", new BinaryExpr(new VariableExpr("i"), "+", new LiteralExpr(1.0))),
+        new BlockStmt(List.of(new PrintStmt(new VariableExpr("i"))))
+    );
+
+    // when
+    executor.execute(List.of(forStmt));
+
+    // then
+    assertEquals("0\n1\n2", output());
+  }
+
+  @Test
+  @DisplayName("for 문은 처음부터 조건이 거짓이면 body 를 실행하지 않는다")
+  void forLoopSkipsBodyWhenConditionIsFalseFromStart() {
+    // given
+    // for (var i = 0; i < 0; i = i + 1) { print i; }
+    Stmt forStmt = new ForStmt(
+        new VarDeclareStmt("i", new LiteralExpr(0.0)),
+        new BinaryExpr(new VariableExpr("i"), "<", new LiteralExpr(0.0)),
+        new AssignExpr("i", new BinaryExpr(new VariableExpr("i"), "+", new LiteralExpr(1.0))),
+        new BlockStmt(List.of(new PrintStmt(new VariableExpr("i"))))
+    );
+
+    // when
+    executor.execute(List.of(forStmt));
+
+    // then
+    assertEquals("", output());
   }
 }
