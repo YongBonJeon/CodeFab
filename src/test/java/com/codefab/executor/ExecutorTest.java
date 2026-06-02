@@ -2,7 +2,9 @@ package com.codefab.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
+import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -202,5 +204,20 @@ class ExecutorTest {
 
     // then
     assertEquals("10", output());
+  }
+
+  @Test
+  @DisplayName("변수를 재할당하면 변경된 값이 출력된다")
+  void printReassignedVariable() {
+    // given
+    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(10.0));
+    Stmt assignStmt = new ExpressionStmt(new AssignExpr("a", new LiteralExpr(99.0)));
+    Stmt printStmt = new PrintStmt(new VariableExpr("a"));
+
+    // when
+    executor.execute(List.of(varStmt, assignStmt, printStmt));
+
+    // then
+    assertEquals("99", output());
   }
 }

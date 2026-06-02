@@ -28,7 +28,15 @@ public class Environment {
   }
 
   public void assign(String name, Object value) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    if (values.containsKey(name)) {
+      values.put(name, value);
+      return;
+    }
+    if (enclosing != null) {
+      enclosing.assign(name, value);
+      return;
+    }
+    throw new RuntimeError("미정의된 변수 '" + name + "'");
   }
 
   public Environment getEnclosing() {

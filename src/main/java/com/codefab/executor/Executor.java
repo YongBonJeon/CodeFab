@@ -1,7 +1,9 @@
 package com.codefab.executor;
 
+import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.Expr;
+import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -36,6 +38,8 @@ public class Executor {
     } else if (stmt instanceof VarDeclareStmt s) {
       Object value = evaluate(s.initializer);
       environment.define(s.name, value);
+    } else if (stmt instanceof ExpressionStmt s) {
+      evaluate(s.expression);
     }
   }
 
@@ -45,6 +49,11 @@ public class Executor {
     }
     if (expr instanceof VariableExpr e) {
       return environment.get(e.name);
+    }
+    if (expr instanceof AssignExpr e) {
+      Object value = evaluate(e.value);
+      environment.assign(e.name, value);
+      return value;
     }
     if (expr instanceof BinaryExpr e) {
       double left = (double) evaluate(e.left);
