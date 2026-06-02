@@ -46,38 +46,41 @@ public class Tokenizer {
 
     private void scanToken() {
         char c = advance();
-        switch (c) {
-            case '(': addToken(LEFT_PAREN); break;
-            case ')': addToken(RIGHT_PAREN); break;
-            case '{': addToken(LEFT_BRACE); break;
-            case '}': addToken(RIGHT_BRACE); break;
-            case ';': addToken(SEMICOLON); break;
-            case '+': addToken(PLUS); break;
-            case '-': addToken(MINUS); break;
-            case '*': addToken(STAR); break;
-            case '/':
-                if (match('/')) {
-                    while (peek() != '\n' && !isAtEnd()) advance();
-                } else {
-                    addToken(SLASH);
-                }
-                break;
-            case '=': addToken(EQUAL); break;
-            case '>': addToken(GREATER); break;
-            case '<': addToken(LESS); break;
-            case '!': addToken(BANG); break;
-            case ' ': case '\r': case '\t': break;
-            case '\n': line++; break;
-            case '"': string(); break;
-            default:
-                if (isDigit(c)) {
-                    number();
-                } else if (isAlpha(c)) {
-                    identifier();
-                } else {
-                    throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
-                }
+      switch (c) {
+        case '(' -> addToken(LEFT_PAREN);
+        case ')' -> addToken(RIGHT_PAREN);
+        case '{' -> addToken(LEFT_BRACE);
+        case '}' -> addToken(RIGHT_BRACE);
+        case ';' -> addToken(SEMICOLON);
+        case '+' -> addToken(PLUS);
+        case '-' -> addToken(MINUS);
+        case '*' -> addToken(STAR);
+        case '/' -> {
+          if (match('/')) {
+            while (peek() != '\n' && !isAtEnd())
+              advance();
+          } else {
+            addToken(SLASH);
+          }
         }
+        case '=' -> addToken(EQUAL);
+        case '>' -> addToken(GREATER);
+        case '<' -> addToken(LESS);
+        case '!' -> addToken(BANG);
+        case ' ', '\r', '\t' -> {
+        }
+        case '\n' -> line++;
+        case '"' -> string();
+        default -> {
+          if (isDigit(c)) {
+            number();
+          } else if (isAlpha(c)) {
+            identifier();
+          } else {
+            throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
+          }
+        }
+      }
     }
 
     private void string() {
