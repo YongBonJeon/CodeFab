@@ -57,7 +57,13 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
     @Override public Void visitExpression(Stmt.Expression stmt)   { return null; }
     @Override public Void visitPrint(Stmt.Print stmt)             { return null; }
-    @Override public Void visitIf(Stmt.If stmt)                   { return null; }
+    @Override
+    public Void visitIf(Stmt.If stmt) {
+        resolve(stmt.condition);
+        resolve(stmt.thenBranch);
+        if (stmt.elseBranch != null) resolve(stmt.elseBranch);
+        return null;
+    }
     @Override public Void visitFor(Stmt.For stmt)                 { return null; }
 
     @Override public Void visitLiteral(Expr.Literal expr)         { return null; }
