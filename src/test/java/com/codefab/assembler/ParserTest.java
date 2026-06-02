@@ -94,4 +94,37 @@ class ParserTest {
     assertThat(add.right).isInstanceOf(Expr.Binary.class);
     assertThat(((Expr.Binary) add.right).operator.type).isEqualTo(STAR);
   }
+
+  @Test
+  @DisplayName("비교 연산은 Binary Expr 로 파싱한다")
+  void parsesComparison() {
+    Expr expr = firstExpr("a > 1;");
+    assertThat(expr).isInstanceOf(Expr.Binary.class);
+    assertThat(((Expr.Binary) expr).operator.type).isEqualTo(GREATER);
+  }
+
+  @Test
+  @DisplayName("and/or 는 Logical Expr 로 파싱한다")
+  void parsesLogical() {
+    assertThat(firstExpr("a and b;")).isInstanceOf(Expr.Logical.class);
+    assertThat(((Expr.Logical) firstExpr("a or b;")).operator.type).isEqualTo(OR);
+  }
+
+  @Test
+  @DisplayName("대입은 Assign Expr 로 파싱하고 우변 표현식을 평가식으로 갖는다")
+  void parsesAssignment() {
+    Expr expr = firstExpr("x = a + b;");
+    assertThat(expr).isInstanceOf(Expr.Assign.class);
+    Expr.Assign assign = (Expr.Assign) expr;
+    assertThat(assign.name.origin).isEqualTo("x");
+    assertThat(assign.value).isInstanceOf(Expr.Binary.class);
+  }
+
+  @Test
+  @DisplayName("대입 대상이 변수가 아니면 ParseError 를 던진다")
+  void throwsOnInvalidAssignmentTarget() {
+    assertThatThrownBy(() -> parse("1 = 2;"))
+        .isInstanceOf(ParseError.class)
+        .hasMessageContaining("대입 대상");
+  }
 }

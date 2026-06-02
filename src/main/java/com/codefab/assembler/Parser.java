@@ -42,7 +42,51 @@ public class Parser {
   }
 
   private Expr expression() {
-    return term();
+    return assignment();
+  }
+
+  private Expr assignment() {
+    Expr expr = or();
+    if (match(EQUAL)) {
+      Token equals = previous();
+      Expr value = assignment();
+      if (expr instanceof Expr.Variable) {
+        Token name = ((Expr.Variable) expr).name;
+        return new Expr.Assign(name, value);
+      }
+      throw new ParseError(equals.line, "잘못된 대입 대상입니다.");
+    }
+    return expr;
+  }
+
+  private Expr or() {
+    Expr expr = and();
+    while (match(OR)) {
+      Token op = previous();
+      Expr right = and();
+      expr = new Expr.Logical(expr, op, right);
+    }
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = comparison();
+    while (match(AND)) {
+      Token op = previous();
+      Expr right = comparison();
+      expr = new Expr.Logical(expr, op, right);
+    }
+    return expr;
+  }
+
+  private Expr comparison() {
+    Expr expr = term();
+    while (match(GREATER, LESS)) {
+      Token op = previous();
+      Expr right = term();
+      expr = new Expr.Binary(expr, op, right);
+    }
+    return expr;
   }
 
   private Expr term() {
