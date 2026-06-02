@@ -110,4 +110,25 @@ class TokenizerTest {
                 .isInstanceOf(ParseError.class)
                 .hasMessageContaining("닫히지 않은 문자열");
     }
+
+    @Test
+    @DisplayName("일반 식별자는 IDENTIFIER 토큰으로 분해한다")
+    void tokenizesIdentifier() {
+        Token id = new Tokenizer("calcSum").tokenize().get(0);
+        assertThat(id.type).isEqualTo(IDENTIFIER);
+        assertThat(id.origin).isEqualTo("calcSum");
+    }
+
+    @Test
+    @DisplayName("예약어는 각각의 키워드 토큰으로 분해한다")
+    void tokenizesKeywords() {
+        assertThat(types("var if else for true false and or print")).containsExactly(
+                VAR, IF, ELSE, FOR, TRUE, FALSE, AND, OR, PRINT, EOF);
+    }
+
+    @Test
+    @DisplayName("예약어를 접두사로 갖는 식별자는 키워드가 아니다")
+    void keywordPrefixIsStillIdentifier() {
+        assertThat(types("ifx forever")).containsExactly(IDENTIFIER, IDENTIFIER, EOF);
+    }
 }

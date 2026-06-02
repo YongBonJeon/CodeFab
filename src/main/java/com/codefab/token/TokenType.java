@@ -7,7 +7,12 @@ public enum TokenType {
     PLUS, MINUS, STAR, SLASH,
     EQUAL, GREATER, LESS, BANG,
 
-    STRING, NUMBER,
+    IDENTIFIER, STRING, NUMBER,
+
+    VAR, IF, ELSE, FOR,
+    TRUE, FALSE,
+    AND, OR,
+    PRINT,
 
     EOF
 }

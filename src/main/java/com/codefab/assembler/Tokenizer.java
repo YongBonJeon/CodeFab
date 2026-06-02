@@ -57,6 +57,8 @@ public class Tokenizer {
             default:
                 if (c >= '0' && c <= '9') {
                     number();
+                } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+                    identifier();
                 } else {
                     throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
                 }
@@ -84,6 +86,30 @@ public class Tokenizer {
         }
         String text = source.substring(start, current);
         tokens.add(new Token(NUMBER, text, Double.parseDouble(text), line));
+    }
+
+    private void identifier() {
+        while ((peek() >= 'a' && peek() <= 'z') || (peek() >= 'A' && peek() <= 'Z')
+                || peek() == '_' || (peek() >= '0' && peek() <= '9')) {
+            advance();
+        }
+        String text = source.substring(start, current);
+        addToken(keywordType(text));
+    }
+
+    private TokenType keywordType(String text) {
+        switch (text) {
+            case "var": return VAR;
+            case "if": return IF;
+            case "else": return ELSE;
+            case "for": return FOR;
+            case "true": return TRUE;
+            case "false": return FALSE;
+            case "and": return AND;
+            case "or": return OR;
+            case "print": return PRINT;
+            default: return IDENTIFIER;
+        }
     }
 
     private char advance() { return source.charAt(current++); }
