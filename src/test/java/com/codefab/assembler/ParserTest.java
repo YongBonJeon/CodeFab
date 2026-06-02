@@ -50,4 +50,28 @@ class ParserTest {
         .isInstanceOf(ParseError.class)
         .hasMessageContaining("';'");
   }
+
+  @Test
+  @DisplayName("식별자는 Variable Expr 로 파싱한다")
+  void parsesVariable() {
+    Expr expr = firstExpr("a;");
+    assertThat(expr).isInstanceOf(Expr.Variable.class);
+    assertThat(((Expr.Variable) expr).name.origin).isEqualTo("a");
+  }
+
+  @Test
+  @DisplayName("괄호는 Grouping Expr 로 감싼다")
+  void parsesGrouping() {
+    Expr expr = firstExpr("(a);");
+    assertThat(expr).isInstanceOf(Expr.Grouping.class);
+    assertThat(((Expr.Grouping) expr).expression).isInstanceOf(Expr.Variable.class);
+  }
+
+  @Test
+  @DisplayName("닫는 괄호가 없으면 ParseError 를 던진다")
+  void throwsWhenParenNotClosed() {
+    assertThatThrownBy(() -> parse("(a;"))
+        .isInstanceOf(ParseError.class)
+        .hasMessageContaining("')'");
+  }
 }

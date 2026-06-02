@@ -50,6 +50,12 @@ public class Parser {
     if (match(TRUE)) return new Expr.Literal(true);
     if (match(NUMBER)) return new Expr.Literal(previous().literal);
     if (match(STRING)) return new Expr.Literal(previous().literal);
+    if (match(IDENTIFIER)) return new Expr.Variable(previous());
+    if (match(LEFT_PAREN)) {
+      Expr e = expression();
+      consume(RIGHT_PAREN, "표현식 뒤에 ')' 가 필요합니다.");
+      return new Expr.Grouping(e);
+    }
     throw new ParseError(peek().line, "표현식이 필요합니다. ('" + peek().origin + "' 발견)");
   }
 
