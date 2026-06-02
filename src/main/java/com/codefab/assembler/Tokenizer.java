@@ -41,8 +41,7 @@ public class Tokenizer {
             case '-': addToken(MINUS); break;
             case '*': addToken(STAR); break;
             case '/':
-                if (peek() == '/') {
-                    advance();
+                if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(SLASH);
@@ -63,6 +62,12 @@ public class Tokenizer {
 
     private char peek() {
         return isAtEnd() ? '\0' : source.charAt(current);
+    }
+
+    private boolean match(char expected) {
+        if (isAtEnd() || source.charAt(current) != expected) return false;
+        current++;
+        return true;
     }
 
     private boolean isAtEnd() { return current >= source.length(); }
