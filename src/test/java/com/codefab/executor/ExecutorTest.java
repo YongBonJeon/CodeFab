@@ -43,4 +43,43 @@ class ExecutorTest {
     // then
     assertEquals("3", output());
   }
+
+  @Test
+  @DisplayName("문자열 리터럴을 출력하면 따옴표 없이 출력된다")
+  void printStringLiteral() {
+    // given
+    Stmt stmt = new PrintStmt(new LiteralExpr("hello"));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("hello", output());
+  }
+
+  @Test
+  @DisplayName("true를 출력하면 true가 출력된다")
+  void printTrueLiteral() {
+    // given
+    Stmt stmt = new PrintStmt(new LiteralExpr(true));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("true", output());
+  }
+
+  @Test
+  @DisplayName("false를 출력하면 false가 출력된다")
+  void printFalseLiteral() {
+    // given
+    Stmt stmt = new PrintStmt(new LiteralExpr(false));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
+  }
 }
