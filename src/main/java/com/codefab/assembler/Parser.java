@@ -28,11 +28,29 @@ public class Parser {
   }
 
   private Stmt declaration() {
+    if (match(VAR)) return varDeclaration();
     return statement();
   }
 
+  private Stmt varDeclaration() {
+    Token name = consume(IDENTIFIER, "변수 이름이 필요합니다.");
+    Expr initializer = null;
+    if (match(EQUAL)) {
+      initializer = expression();
+    }
+    consume(SEMICOLON, "변수 선언 끝에 ';' 가 필요합니다.");
+    return new Stmt.VarDeclare(name, initializer);
+  }
+
   private Stmt statement() {
+    if (match(PRINT)) return printStatement();
     return expressionStatement();
+  }
+
+  private Stmt printStatement() {
+    Expr value = expression();
+    consume(SEMICOLON, "print 문 끝에 ';' 가 필요합니다.");
+    return new Stmt.Print(value);
   }
 
   private Stmt expressionStatement() {

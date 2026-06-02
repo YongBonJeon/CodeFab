@@ -127,4 +127,29 @@ class ParserTest {
         .isInstanceOf(ParseError.class)
         .hasMessageContaining("대입 대상");
   }
+
+  @Test
+  @DisplayName("print 문을 Print Stmt 로 파싱한다")
+  void parsesPrintStatement() {
+    Stmt stmt = parse("print a;").get(0);
+    assertThat(stmt).isInstanceOf(Stmt.Print.class);
+    assertThat(((Stmt.Print) stmt).expression).isInstanceOf(Expr.Variable.class);
+  }
+
+  @Test
+  @DisplayName("초기화식이 있는 변수 선언을 VarDeclare Stmt 로 파싱한다")
+  void parsesVarDeclarationWithInitializer() {
+    Stmt stmt = parse("var a = 3;").get(0);
+    assertThat(stmt).isInstanceOf(Stmt.VarDeclare.class);
+    Stmt.VarDeclare decl = (Stmt.VarDeclare) stmt;
+    assertThat(decl.name.origin).isEqualTo("a");
+    assertThat(((Expr.Literal) decl.initializer).value).isEqualTo(3.0);
+  }
+
+  @Test
+  @DisplayName("초기화식이 없는 변수 선언은 initializer 가 null 이다")
+  void parsesVarDeclarationWithoutInitializer() {
+    Stmt.VarDeclare decl = (Stmt.VarDeclare) parse("var a;").get(0);
+    assertThat(decl.initializer).isNull();
+  }
 }
