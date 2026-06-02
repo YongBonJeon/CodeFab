@@ -4,6 +4,7 @@ import static com.codefab.token.TokenType.*;
 
 import com.codefab.error.ParseError;
 import com.codefab.token.Token;
+import com.codefab.token.TokenType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +32,11 @@ public class Tokenizer {
     private void scanToken() {
         char c = advance();
         switch (c) {
-            case '(': tokens.add(new Token(LEFT_PAREN, source.substring(start, current), null, line)); break;
-            case ')': tokens.add(new Token(RIGHT_PAREN, source.substring(start, current), null, line)); break;
-            case '{': tokens.add(new Token(LEFT_BRACE, source.substring(start, current), null, line)); break;
-            case '}': tokens.add(new Token(RIGHT_BRACE, source.substring(start, current), null, line)); break;
-            case ';': tokens.add(new Token(SEMICOLON, source.substring(start, current), null, line)); break;
+            case '(': addToken(LEFT_PAREN); break;
+            case ')': addToken(RIGHT_PAREN); break;
+            case '{': addToken(LEFT_BRACE); break;
+            case '}': addToken(RIGHT_BRACE); break;
+            case ';': addToken(SEMICOLON); break;
             case ' ': case '\r': case '\t': break;
             case '\n': line++; break;
             default:
@@ -46,4 +47,8 @@ public class Tokenizer {
     private char advance() { return source.charAt(current++); }
 
     private boolean isAtEnd() { return current >= source.length(); }
+
+    private void addToken(TokenType type) {
+        tokens.add(new Token(type, source.substring(start, current), null, line));
+    }
 }
