@@ -447,4 +447,34 @@ class ExecutorTest {
     // then
     assertEquals("", output());
   }
+
+  @Test
+  @DisplayName("숫자가 아닌 값에 산술 연산을 하면 RuntimeError 가 발생한다")
+  void arithmeticOnNonNumberThrowsRuntimeError() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr("hello"), "-", new LiteralExpr(1.0)));
+
+    // when & then
+    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+  }
+
+  @Test
+  @DisplayName("0 으로 나누면 RuntimeError 가 발생한다")
+  void divisionByZeroThrowsRuntimeError() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(10.0), "/", new LiteralExpr(0.0)));
+
+    // when & then
+    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+  }
+
+  @Test
+  @DisplayName("선언하지 않은 변수를 참조하면 RuntimeError 가 발생한다")
+  void undefinedVariableThrowsRuntimeError() {
+    // given
+    Stmt stmt = new PrintStmt(new VariableExpr("x"));
+
+    // when & then
+    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+  }
 }

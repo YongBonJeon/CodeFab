@@ -1,5 +1,6 @@
 package com.codefab.executor;
 
+import com.codefab.error.RuntimeError;
 import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
@@ -105,13 +106,20 @@ public class Executor {
       return value;
     }
     if (expr instanceof BinaryExpr e) {
-      double left = (double) evaluate(e.left);
-      double right = (double) evaluate(e.right);
+      Object leftVal = evaluate(e.left);
+      Object rightVal = evaluate(e.right);
+      if (!(leftVal instanceof Double) || !(rightVal instanceof Double)) {
+        throw new RuntimeError("피연산자는 숫자여야 합니다");
+      }
+      double left = (double) leftVal;
+      double right = (double) rightVal;
       switch (e.op) {
         case "+": return left + right;
         case "-": return left - right;
         case "*": return left * right;
-        case "/": return left / right;
+        case "/":
+          if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
+          return left / right;
         case ">": return left > right;
         case "<": return left < right;
       }
