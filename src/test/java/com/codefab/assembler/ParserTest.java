@@ -74,4 +74,24 @@ class ParserTest {
         .isInstanceOf(ParseError.class)
         .hasMessageContaining("')'");
   }
+
+  @Test
+  @DisplayName("단항 연산자는 Unary Expr 로 파싱한다")
+  void parsesUnary() {
+    Expr expr = firstExpr("-a;");
+    assertThat(expr).isInstanceOf(Expr.Unary.class);
+    assertThat(((Expr.Unary) expr).operator.type).isEqualTo(MINUS);
+  }
+
+  @Test
+  @DisplayName("곱셈은 덧셈보다 먼저 묶여 트리 깊은 곳에 위치한다")
+  void respectsArithmeticPrecedence() {
+    Expr expr = firstExpr("1 + 2 * 3;");
+    assertThat(expr).isInstanceOf(Expr.Binary.class);
+    Expr.Binary add = (Expr.Binary) expr;
+    assertThat(add.operator.type).isEqualTo(PLUS);
+    assertThat(add.left).isInstanceOf(Expr.Literal.class);
+    assertThat(add.right).isInstanceOf(Expr.Binary.class);
+    assertThat(((Expr.Binary) add.right).operator.type).isEqualTo(STAR);
+  }
 }
