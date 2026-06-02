@@ -9,6 +9,7 @@ import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
@@ -333,5 +334,25 @@ class ExecutorTest {
 
     // then
     assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("괄호로 묶인 표현식을 평가한다")
+  void evaluatesGroupingExpr() {
+    // given
+    // (2 + 3) * 4 = 20
+    Stmt stmt = new PrintStmt(
+        new BinaryExpr(
+            new GroupingExpr(new BinaryExpr(new LiteralExpr(2.0), "+", new LiteralExpr(3.0))),
+            "*",
+            new LiteralExpr(4.0)
+        )
+    );
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("20", output());
   }
 }

@@ -5,6 +5,7 @@ import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.Expr;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.GroupingExpr;
 import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
@@ -65,6 +66,9 @@ public class Executor {
   Object evaluate(Expr expr) {
     if (expr instanceof LiteralExpr e) {
       return e.value;
+    }
+    if (expr instanceof GroupingExpr e) {
+      return evaluate(e.expression);
     }
     if (expr instanceof UnaryExpr e) {
       Object right = evaluate(e.right);
