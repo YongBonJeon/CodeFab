@@ -1,5 +1,6 @@
 package com.codefab.executor;
 
+import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.Expr;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
@@ -36,6 +37,16 @@ public class Executor {
   Object evaluate(Expr expr) {
     if (expr instanceof LiteralExpr e) {
       return e.value;
+    }
+    if (expr instanceof BinaryExpr e) {
+      double left = (double) evaluate(e.left);
+      double right = (double) evaluate(e.right);
+      switch (e.op) {
+        case "+": return left + right;
+        case "-": return left - right;
+        case "*": return left * right;
+        case "/": return left / right;
+      }
     }
     throw new UnsupportedOperationException("Not implemented yet");
   }

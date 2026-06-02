@@ -2,6 +2,7 @@ package com.codefab.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -81,5 +82,57 @@ class ExecutorTest {
 
     // then
     assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("두 숫자를 더한 결과를 출력한다")
+  void printAddition() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "+", new LiteralExpr(2.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("5", output());
+  }
+
+  @Test
+  @DisplayName("두 숫자를 뺀 결과를 출력한다")
+  void printSubtraction() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), "-", new LiteralExpr(2.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("3", output());
+  }
+
+  @Test
+  @DisplayName("두 숫자를 곱한 결과를 출력한다")
+  void printMultiplication() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "*", new LiteralExpr(4.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("12", output());
+  }
+
+  @Test
+  @DisplayName("두 숫자를 나눈 결과를 출력한다")
+  void printDivision() {
+    // given
+    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(10.0), "/", new LiteralExpr(2.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("5", output());
   }
 }
