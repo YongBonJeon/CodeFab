@@ -37,6 +37,21 @@ public class Tokenizer {
             case '{': addToken(LEFT_BRACE); break;
             case '}': addToken(RIGHT_BRACE); break;
             case ';': addToken(SEMICOLON); break;
+            case '+': addToken(PLUS); break;
+            case '-': addToken(MINUS); break;
+            case '*': addToken(STAR); break;
+            case '/':
+                if (peek() == '/') {
+                    advance();
+                    while (peek() != '\n' && !isAtEnd()) advance();
+                } else {
+                    addToken(SLASH);
+                }
+                break;
+            case '=': addToken(EQUAL); break;
+            case '>': addToken(GREATER); break;
+            case '<': addToken(LESS); break;
+            case '!': addToken(BANG); break;
             case ' ': case '\r': case '\t': break;
             case '\n': line++; break;
             default:
@@ -45,6 +60,10 @@ public class Tokenizer {
     }
 
     private char advance() { return source.charAt(current++); }
+
+    private char peek() {
+        return isAtEnd() ? '\0' : source.charAt(current);
+    }
 
     private boolean isAtEnd() { return current >= source.length(); }
 

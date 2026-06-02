@@ -57,4 +57,24 @@ class TokenizerTest {
                 .isInstanceOf(ParseError.class)
                 .hasMessageContaining("예상치 못한 문자");
     }
+
+    @Test
+    @DisplayName("산술/비교/단항 연산자를 각각의 토큰으로 분해한다")
+    void tokenizesOperators() {
+        assertThat(types("+-*/=><!")).containsExactly(
+                PLUS, MINUS, STAR, SLASH, EQUAL, GREATER, LESS, BANG, EOF);
+    }
+
+    @Test
+    @DisplayName("// 주석은 줄 끝까지 무시한다")
+    void ignoresLineComment() {
+        assertThat(types("+ // 주석은 토큰이 아니다\n-"))
+                .containsExactly(PLUS, MINUS, EOF);
+    }
+
+    @Test
+    @DisplayName("단일 슬래시는 SLASH 토큰으로 분해한다")
+    void singleSlashIsDivision() {
+        assertThat(types("/")).containsExactly(SLASH, EOF);
+    }
 }
