@@ -6,9 +6,24 @@ import com.codefab.error.ParseError;
 import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Tokenizer {
+
+    private static final Map<String, TokenType> KEYWORDS = new HashMap<>();
+    static {
+        KEYWORDS.put("var", VAR);
+        KEYWORDS.put("if", IF);
+        KEYWORDS.put("else", ELSE);
+        KEYWORDS.put("for", FOR);
+        KEYWORDS.put("true", TRUE);
+        KEYWORDS.put("false", FALSE);
+        KEYWORDS.put("and", AND);
+        KEYWORDS.put("or", OR);
+        KEYWORDS.put("print", PRINT);
+    }
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
@@ -91,22 +106,8 @@ public class Tokenizer {
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
         String text = source.substring(start, current);
-        addToken(keywordType(text));
-    }
-
-    private TokenType keywordType(String text) {
-        switch (text) {
-            case "var": return VAR;
-            case "if": return IF;
-            case "else": return ELSE;
-            case "for": return FOR;
-            case "true": return TRUE;
-            case "false": return FALSE;
-            case "and": return AND;
-            case "or": return OR;
-            case "print": return PRINT;
-            default: return IDENTIFIER;
-        }
+        TokenType type = KEYWORDS.getOrDefault(text, IDENTIFIER);
+        addToken(type);
     }
 
     private char advance() { return source.charAt(current++); }
