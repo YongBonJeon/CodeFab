@@ -53,6 +53,7 @@ public class Tokenizer {
             case '!': addToken(BANG); break;
             case ' ': case '\r': case '\t': break;
             case '\n': line++; break;
+            case '"': string(); break;
             default:
                 if (c >= '0' && c <= '9') {
                     number();
@@ -60,6 +61,19 @@ public class Tokenizer {
                     throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
                 }
         }
+    }
+
+    private void string() {
+        while (peek() != '"' && !isAtEnd()) {
+            if (peek() == '\n') line++;
+            advance();
+        }
+        if (isAtEnd()) {
+            throw new ParseError(line, "닫히지 않은 문자열입니다.");
+        }
+        advance(); // closing "
+        String value = source.substring(start + 1, current - 1);
+        tokens.add(new Token(STRING, source.substring(start, current), value, line));
     }
 
     private void number() {

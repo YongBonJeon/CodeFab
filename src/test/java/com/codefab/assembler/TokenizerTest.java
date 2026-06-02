@@ -94,4 +94,20 @@ class TokenizerTest {
         assertThat(number.type).isEqualTo(NUMBER);
         assertThat(number.literal).isEqualTo(3.14);
     }
+
+    @Test
+    @DisplayName("문자열 리터럴은 따옴표를 제외한 값을 보관한다")
+    void tokenizesStringLiteral() {
+        Token string = new Tokenizer("\"hello\"").tokenize().get(0);
+        assertThat(string.type).isEqualTo(STRING);
+        assertThat(string.literal).isEqualTo("hello");
+    }
+
+    @Test
+    @DisplayName("닫히지 않은 문자열은 ParseError 를 던진다")
+    void throwsOnUnterminatedString() {
+        assertThatThrownBy(() -> new Tokenizer("\"oops").tokenize())
+                .isInstanceOf(ParseError.class)
+                .hasMessageContaining("닫히지 않은 문자열");
+    }
 }

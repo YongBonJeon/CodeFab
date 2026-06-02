@@ -7,7 +7,7 @@ public enum TokenType {
     PLUS, MINUS, STAR, SLASH,
     EQUAL, GREATER, LESS, BANG,
 
-    NUMBER,
+    STRING, NUMBER,
 
     EOF
 }
