@@ -13,6 +13,7 @@ import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
+import com.codefab.ast.UnaryExpr;
 import com.codefab.ast.VarDeclareStmt;
 import com.codefab.ast.VariableExpr;
 import java.io.ByteArrayOutputStream;
@@ -306,5 +307,31 @@ class ExecutorTest {
 
     // then
     assertEquals("", output());
+  }
+
+  @Test
+  @DisplayName("숫자에 단항 minus를 적용하면 부호가 반전된다")
+  void unaryMinusNegatesNumber() {
+    // given
+    Stmt stmt = new PrintStmt(new UnaryExpr("-", new LiteralExpr(5.0)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("-5", output());
+  }
+
+  @Test
+  @DisplayName("true에 논리 not을 적용하면 false가 출력된다")
+  void unaryNotNegatesBoolean() {
+    // given
+    Stmt stmt = new PrintStmt(new UnaryExpr("!", new LiteralExpr(true)));
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("false", output());
   }
 }

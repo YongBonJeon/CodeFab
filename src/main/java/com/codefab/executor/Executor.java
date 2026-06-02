@@ -9,6 +9,7 @@ import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
+import com.codefab.ast.UnaryExpr;
 import com.codefab.ast.VarDeclareStmt;
 import com.codefab.ast.VariableExpr;
 import java.io.PrintStream;
@@ -64,6 +65,11 @@ public class Executor {
   Object evaluate(Expr expr) {
     if (expr instanceof LiteralExpr e) {
       return e.value;
+    }
+    if (expr instanceof UnaryExpr e) {
+      Object right = evaluate(e.right);
+      if (e.op.equals("-")) return -(double) right;
+      if (e.op.equals("!")) return !isTruthy(right);
     }
     if (expr instanceof VariableExpr e) {
       return environment.get(e.name);
