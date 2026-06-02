@@ -44,6 +44,8 @@ public class Parser {
 
   private Stmt statement() {
     if (match(PRINT)) return printStatement();
+    if (match(IF)) return ifStatement();
+    if (match(LEFT_BRACE)) return new Stmt.Block(block());
     return expressionStatement();
   }
 
@@ -51,6 +53,27 @@ public class Parser {
     Expr value = expression();
     consume(SEMICOLON, "print 문 끝에 ';' 가 필요합니다.");
     return new Stmt.Print(value);
+  }
+
+  private Stmt ifStatement() {
+    consume(LEFT_PAREN, "if 뒤에 '(' 가 필요합니다.");
+    Expr condition = expression();
+    consume(RIGHT_PAREN, "if 조건 뒤에 ')' 가 필요합니다.");
+    Stmt thenBranch = statement();
+    Stmt elseBranch = null;
+    if (match(ELSE)) {
+      elseBranch = statement();
+    }
+    return new Stmt.If(condition, thenBranch, elseBranch);
+  }
+
+  private List<Stmt> block() {
+    List<Stmt> stmts = new ArrayList<>();
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      stmts.add(declaration());
+    }
+    consume(RIGHT_BRACE, "블록 끝에 '}' 가 필요합니다.");
+    return stmts;
   }
 
   private Stmt expressionStatement() {

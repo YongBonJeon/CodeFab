@@ -152,4 +152,38 @@ class ParserTest {
     Stmt.VarDeclare decl = (Stmt.VarDeclare) parse("var a;").get(0);
     assertThat(decl.initializer).isNull();
   }
+
+  @Test
+  @DisplayName("중괄호 묶음을 Block Stmt 로 파싱한다")
+  void parsesBlock() {
+    Stmt stmt = parse("{ var a = 1; print a; }").get(0);
+    assertThat(stmt).isInstanceOf(Stmt.Block.class);
+    assertThat(((Stmt.Block) stmt).statements).hasSize(2);
+  }
+
+  @Test
+  @DisplayName("else 없는 if 문을 If Stmt 로 파싱한다")
+  void parsesIfWithoutElse() {
+    Stmt stmt = parse("if (a > 0) a = 1;").get(0);
+    assertThat(stmt).isInstanceOf(Stmt.If.class);
+    Stmt.If ifStmt = (Stmt.If) stmt;
+    assertThat(ifStmt.condition).isInstanceOf(Expr.Binary.class);
+    assertThat(ifStmt.thenBranch).isInstanceOf(Stmt.Expression.class);
+    assertThat(ifStmt.elseBranch).isNull();
+  }
+
+  @Test
+  @DisplayName("else 절이 있으면 elseBranch 를 채운다")
+  void parsesIfWithElse() {
+    Stmt.If ifStmt = (Stmt.If) parse("if (a > 0) a = 1; else a = 2;").get(0);
+    assertThat(ifStmt.elseBranch).isInstanceOf(Stmt.Expression.class);
+  }
+
+  @Test
+  @DisplayName("블록이 닫히지 않으면 ParseError 를 던진다")
+  void throwsWhenBlockNotClosed() {
+    assertThatThrownBy(() -> parse("{ var a = 1;"))
+        .isInstanceOf(ParseError.class)
+        .hasMessageContaining("'}'");
+  }
 }
