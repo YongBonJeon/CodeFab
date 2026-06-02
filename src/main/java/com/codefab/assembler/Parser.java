@@ -37,10 +37,7 @@ public class Parser {
 
   private Stmt expressionStatement() {
     Expr e = expression();
-    if (!check(SEMICOLON)) {
-      throw new ParseError(peek().line, "문장 끝에 ';' 가 필요합니다.");
-    }
-    advance();
+    consume(SEMICOLON, "문장 끝에 ';' 가 필요합니다.");
     return new Stmt.Expression(e);
   }
 
@@ -84,5 +81,10 @@ public class Parser {
 
   private Token previous() {
     return tokens.get(current - 1);
+  }
+
+  private Token consume(TokenType type, String message) {
+    if (check(type)) return advance();
+    throw new ParseError(peek().line, message);
   }
 }
