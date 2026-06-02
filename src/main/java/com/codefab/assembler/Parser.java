@@ -47,7 +47,7 @@ public class Parser {
 
   private Expr term() {
     Expr expr = factor();
-    while (match(PLUS) || match(MINUS)) {
+    while (match(PLUS, MINUS)) {
       Token op = previous();
       Expr right = factor();
       expr = new Expr.Binary(expr, op, right);
@@ -57,7 +57,7 @@ public class Parser {
 
   private Expr factor() {
     Expr expr = unary();
-    while (match(STAR) || match(SLASH)) {
+    while (match(STAR, SLASH)) {
       Token op = previous();
       Expr right = unary();
       expr = new Expr.Binary(expr, op, right);
@@ -66,7 +66,7 @@ public class Parser {
   }
 
   private Expr unary() {
-    if (match(BANG) || match(MINUS)) {
+    if (match(BANG, MINUS)) {
       Token op = previous();
       Expr right = unary();
       return new Expr.Unary(op, right);
@@ -77,8 +77,7 @@ public class Parser {
   private Expr primary() {
     if (match(FALSE)) return new Expr.Literal(false);
     if (match(TRUE)) return new Expr.Literal(true);
-    if (match(NUMBER)) return new Expr.Literal(previous().literal);
-    if (match(STRING)) return new Expr.Literal(previous().literal);
+    if (match(NUMBER, STRING)) return new Expr.Literal(previous().literal);
     if (match(IDENTIFIER)) return new Expr.Variable(previous());
     if (match(LEFT_PAREN)) {
       Expr e = expression();
@@ -88,10 +87,12 @@ public class Parser {
     throw new ParseError(peek().line, "표현식이 필요합니다. ('" + peek().origin + "' 발견)");
   }
 
-  private boolean match(TokenType type) {
-    if (check(type)) {
-      advance();
-      return true;
+  private boolean match(TokenType... types) {
+    for (TokenType t : types) {
+      if (check(t)) {
+        advance();
+        return true;
+      }
     }
     return false;
   }
