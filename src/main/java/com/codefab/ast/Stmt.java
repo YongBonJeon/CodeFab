@@ -15,6 +15,8 @@ public abstract class Stmt {
     R visitBlock(Block stmt);
 
     R visitIf(If stmt);
+
+    R visitFor(For stmt);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -87,6 +89,25 @@ public abstract class Stmt {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitIf(this);
+    }
+  }
+
+  public static final class For extends Stmt {
+    public final Stmt initializer;
+    public final Expr condition;
+    public final Expr increment;
+    public final Stmt body;
+
+    public For(Stmt initializer, Expr condition, Expr increment, Stmt body) {
+      this.initializer = initializer;
+      this.condition = condition;
+      this.increment = increment;
+      this.body = body;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitFor(this);
     }
   }
 }

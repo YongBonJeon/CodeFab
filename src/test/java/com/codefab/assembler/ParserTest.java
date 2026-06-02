@@ -186,4 +186,25 @@ class ParserTest {
         .isInstanceOf(ParseError.class)
         .hasMessageContaining("'}'");
   }
+
+  @Test
+  @DisplayName("for 문을 초기화/조건/증감/본문을 갖는 For Stmt 로 파싱한다")
+  void parsesForStatement() {
+    Stmt stmt = parse("for (var i = 0; i < 3; i = i + 1) { print i; }").get(0);
+    assertThat(stmt).isInstanceOf(Stmt.For.class);
+    Stmt.For forStmt = (Stmt.For) stmt;
+    assertThat(forStmt.initializer).isInstanceOf(Stmt.VarDeclare.class);
+    assertThat(forStmt.condition).isInstanceOf(Expr.Binary.class);
+    assertThat(forStmt.increment).isInstanceOf(Expr.Assign.class);
+    assertThat(forStmt.body).isInstanceOf(Stmt.Block.class);
+  }
+
+  @Test
+  @DisplayName("for 절의 각 항목은 생략될 수 있다")
+  void parsesForWithEmptyClauses() {
+    Stmt.For forStmt = (Stmt.For) parse("for (;;) print 1;").get(0);
+    assertThat(forStmt.initializer).isNull();
+    assertThat(forStmt.condition).isNull();
+    assertThat(forStmt.increment).isNull();
+  }
 }

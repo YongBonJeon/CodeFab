@@ -45,6 +45,7 @@ public class Parser {
   private Stmt statement() {
     if (match(PRINT)) return printStatement();
     if (match(IF)) return ifStatement();
+    if (match(FOR)) return forStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
     return expressionStatement();
   }
@@ -65,6 +66,34 @@ public class Parser {
       elseBranch = statement();
     }
     return new Stmt.If(condition, thenBranch, elseBranch);
+  }
+
+  private Stmt forStatement() {
+    consume(LEFT_PAREN, "for 뒤에 '(' 가 필요합니다.");
+
+    Stmt initializer;
+    if (match(SEMICOLON)) {
+      initializer = null;
+    } else if (match(VAR)) {
+      initializer = varDeclaration();
+    } else {
+      initializer = expressionStatement();
+    }
+
+    Expr condition = null;
+    if (!check(SEMICOLON)) {
+      condition = expression();
+    }
+    consume(SEMICOLON, "for 조건 뒤에 ';' 가 필요합니다.");
+
+    Expr increment = null;
+    if (!check(RIGHT_PAREN)) {
+      increment = expression();
+    }
+    consume(RIGHT_PAREN, "for 절 뒤에 ')' 가 필요합니다.");
+
+    Stmt body = statement();
+    return new Stmt.For(initializer, condition, increment, body);
   }
 
   private List<Stmt> block() {
