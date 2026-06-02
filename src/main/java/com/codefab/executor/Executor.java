@@ -5,6 +5,7 @@ import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.Expr;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -41,6 +42,12 @@ public class Executor {
       environment.define(s.name, value);
     } else if (stmt instanceof ExpressionStmt s) {
       evaluate(s.expression);
+    } else if (stmt instanceof IfStmt s) {
+      if (isTruthy(evaluate(s.condition))) {
+        execute(s.thenBranch);
+      } else if (s.elseBranch != null) {
+        execute(s.elseBranch);
+      }
     } else if (stmt instanceof BlockStmt s) {
       Environment previous = this.environment;
       this.environment = new Environment(previous);
@@ -79,6 +86,12 @@ public class Executor {
       }
     }
     throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  private boolean isTruthy(Object value) {
+    if (value == null) return false;
+    if (value instanceof Boolean b) return b;
+    return true;
   }
 
   private String stringify(Object value) {

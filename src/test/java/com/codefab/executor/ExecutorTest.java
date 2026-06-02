@@ -9,6 +9,7 @@ import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.BlockStmt;
 import com.codefab.ast.ExpressionStmt;
+import com.codefab.ast.IfStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
@@ -254,5 +255,56 @@ class ExecutorTest {
     assertThrows(RuntimeError.class, () -> executor.execute(List.of(
         new PrintStmt(new VariableExpr("a"))
     )));
+  }
+
+  @Test
+  @DisplayName("조건이 참이면 then 블록을 실행한다")
+  void ifExecutesThenWhenTrue() {
+    // given
+    Stmt ifStmt = new IfStmt(
+        new LiteralExpr(true),
+        new PrintStmt(new LiteralExpr("then")),
+        null
+    );
+
+    // when
+    executor.execute(List.of(ifStmt));
+
+    // then
+    assertEquals("then", output());
+  }
+
+  @Test
+  @DisplayName("조건이 거짓이면 else 블록을 실행한다")
+  void ifExecutesElseWhenFalse() {
+    // given
+    Stmt ifStmt = new IfStmt(
+        new LiteralExpr(false),
+        new PrintStmt(new LiteralExpr("then")),
+        new PrintStmt(new LiteralExpr("else"))
+    );
+
+    // when
+    executor.execute(List.of(ifStmt));
+
+    // then
+    assertEquals("else", output());
+  }
+
+  @Test
+  @DisplayName("조건이 거짓이고 else가 없으면 아무것도 실행하지 않는다")
+  void ifDoesNothingWhenFalseAndNoElse() {
+    // given
+    Stmt ifStmt = new IfStmt(
+        new LiteralExpr(false),
+        new PrintStmt(new LiteralExpr("then")),
+        null
+    );
+
+    // when
+    executor.execute(List.of(ifStmt));
+
+    // then
+    assertEquals("", output());
   }
 }
