@@ -20,3 +20,8 @@
 [feat] 로그인 소셜 인증 추가
 
 [fix] 사용자 세션 만료 버그 수정
+
+# Code Style
+
+## Java
+Google Java Style Guide를 따른다.
