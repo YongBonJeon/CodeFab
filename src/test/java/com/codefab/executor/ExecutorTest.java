@@ -1,9 +1,13 @@
 package com.codefab.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.codefab.error.RuntimeError;
 
 import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
+import com.codefab.ast.BlockStmt;
 import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
@@ -219,5 +223,36 @@ class ExecutorTest {
 
     // then
     assertEquals("99", output());
+  }
+
+  @Test
+  @DisplayName("블록 안에서 외부 변수에 접근할 수 있다")
+  void blockCanAccessOuterVariable() {
+    // given
+    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(5.0));
+    Stmt block = new BlockStmt(List.of(
+        new PrintStmt(new VariableExpr("a"))
+    ));
+
+    // when
+    executor.execute(List.of(varStmt, block));
+
+    // then
+    assertEquals("5", output());
+  }
+
+  @Test
+  @DisplayName("블록 안에서 선언한 변수는 블록 밖에서 접근할 수 없다")
+  void blockVariableNotAccessibleOutside() {
+    // given
+    Stmt block = new BlockStmt(List.of(
+        new VarDeclareStmt("a", new LiteralExpr(5.0))
+    ));
+
+    // when & then
+    executor.execute(List.of(block));
+    assertThrows(RuntimeError.class, () -> executor.execute(List.of(
+        new PrintStmt(new VariableExpr("a"))
+    )));
   }
 }

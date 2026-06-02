@@ -24,6 +24,9 @@ public class Environment {
     if (values.containsKey(name)) {
       return values.get(name);
     }
+    if (enclosing != null) {
+      return enclosing.get(name);
+    }
     throw new RuntimeError("미정의된 변수 '" + name + "'");
   }
 

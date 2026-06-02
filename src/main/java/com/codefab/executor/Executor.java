@@ -2,6 +2,7 @@ package com.codefab.executor;
 
 import com.codefab.ast.AssignExpr;
 import com.codefab.ast.BinaryExpr;
+import com.codefab.ast.BlockStmt;
 import com.codefab.ast.Expr;
 import com.codefab.ast.ExpressionStmt;
 import com.codefab.ast.LiteralExpr;
@@ -40,6 +41,16 @@ public class Executor {
       environment.define(s.name, value);
     } else if (stmt instanceof ExpressionStmt s) {
       evaluate(s.expression);
+    } else if (stmt instanceof BlockStmt s) {
+      Environment previous = this.environment;
+      this.environment = new Environment(previous);
+      try {
+        for (Stmt statement : s.statements) {
+          execute(statement);
+        }
+      } finally {
+        this.environment = previous;
+      }
     }
   }
 
