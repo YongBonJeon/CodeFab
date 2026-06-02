@@ -55,9 +55,9 @@ public class Tokenizer {
             case '\n': line++; break;
             case '"': string(); break;
             default:
-                if (c >= '0' && c <= '9') {
+                if (isDigit(c)) {
                     number();
-                } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+                } else if (isAlpha(c)) {
                     identifier();
                 } else {
                     throw new ParseError(line, "예상치 못한 문자: '" + c + "'");
@@ -79,20 +79,17 @@ public class Tokenizer {
     }
 
     private void number() {
-        while (peek() >= '0' && peek() <= '9') advance();
-        if (peek() == '.' && peekNext() >= '0' && peekNext() <= '9') {
+        while (isDigit(peek())) advance();
+        if (peek() == '.' && isDigit(peekNext())) {
             advance();
-            while (peek() >= '0' && peek() <= '9') advance();
+            while (isDigit(peek())) advance();
         }
         String text = source.substring(start, current);
         tokens.add(new Token(NUMBER, text, Double.parseDouble(text), line));
     }
 
     private void identifier() {
-        while ((peek() >= 'a' && peek() <= 'z') || (peek() >= 'A' && peek() <= 'Z')
-                || peek() == '_' || (peek() >= '0' && peek() <= '9')) {
-            advance();
-        }
+        while (isAlphaNumeric(peek())) advance();
         String text = source.substring(start, current);
         addToken(keywordType(text));
     }
@@ -129,6 +126,11 @@ public class Tokenizer {
     }
 
     private boolean isAtEnd() { return current >= source.length(); }
+    private boolean isDigit(char c) { return c >= '0' && c <= '9'; }
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+    private boolean isAlphaNumeric(char c) { return isAlpha(c) || isDigit(c); }
 
     private void addToken(TokenType type) {
         tokens.add(new Token(type, source.substring(start, current), null, line));
