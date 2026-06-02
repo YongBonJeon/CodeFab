@@ -10,6 +10,19 @@ import com.codefab.token.TokenType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Recursive-descent parser. Grammar:
+ *
+ * <p>program -> declaration* EOF declaration -> varDecl | statement varDecl -> "var" IDENTIFIER
+ * ("=" expression)? ";" statement -> printStmt | ifStmt | forStmt | block | exprStmt printStmt ->
+ * "print" expression ";" ifStmt -> "if" "(" expression ")" statement ("else" statement)? forStmt ->
+ * "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement block -> "{"
+ * declaration* "}" exprStmt -> expression ";" expression -> assignment assignment -> IDENTIFIER "="
+ * assignment | logic_or logic_or -> logic_and ("or" logic_and)* logic_and -> comparison ("and"
+ * comparison)* comparison -> term ((">" | "<") term)* term -> factor (("+" | "-") factor)* factor
+ * -> unary (("*" | "/") unary)* unary -> ("!" | "-") unary | primary primary -> NUMBER | STRING |
+ * "true" | "false" | "(" expression ")" | IDENTIFIER
+ */
 public class Parser {
 
   private final List<Token> tokens;
