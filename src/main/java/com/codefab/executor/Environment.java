@@ -1,5 +1,6 @@
 package com.codefab.executor;
 
+import com.codefab.error.RuntimeError;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +17,14 @@ public class Environment {
   }
 
   public void define(String name, Object value) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    values.put(name, value);
   }
 
   public Object get(String name) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    if (values.containsKey(name)) {
+      return values.get(name);
+    }
+    throw new RuntimeError("미정의된 변수 '" + name + "'");
   }
 
   public void assign(String name, Object value) {

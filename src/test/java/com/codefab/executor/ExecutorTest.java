@@ -6,6 +6,8 @@ import com.codefab.ast.BinaryExpr;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
+import com.codefab.ast.VarDeclareStmt;
+import com.codefab.ast.VariableExpr;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -186,5 +188,19 @@ class ExecutorTest {
 
     // then
     assertEquals("false", output());
+  }
+
+  @Test
+  @DisplayName("변수를 선언하고 출력하면 초기값이 출력된다")
+  void printDeclaredVariable() {
+    // given
+    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(10.0));
+    Stmt printStmt = new PrintStmt(new VariableExpr("a"));
+
+    // when
+    executor.execute(List.of(varStmt, printStmt));
+
+    // then
+    assertEquals("10", output());
   }
 }

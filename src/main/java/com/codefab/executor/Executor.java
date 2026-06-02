@@ -5,6 +5,8 @@ import com.codefab.ast.Expr;
 import com.codefab.ast.LiteralExpr;
 import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
+import com.codefab.ast.VarDeclareStmt;
+import com.codefab.ast.VariableExpr;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -31,12 +33,18 @@ public class Executor {
     if (stmt instanceof PrintStmt s) {
       Object value = evaluate(s.expression);
       out.println(stringify(value));
+    } else if (stmt instanceof VarDeclareStmt s) {
+      Object value = evaluate(s.initializer);
+      environment.define(s.name, value);
     }
   }
 
   Object evaluate(Expr expr) {
     if (expr instanceof LiteralExpr e) {
       return e.value;
+    }
+    if (expr instanceof VariableExpr e) {
+      return environment.get(e.name);
     }
     if (expr instanceof BinaryExpr e) {
       double left = (double) evaluate(e.left);
