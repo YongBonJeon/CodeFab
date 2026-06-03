@@ -6,7 +6,7 @@ import com.codefab.error.RuntimeError;
 import java.io.PrintStream;
 import java.util.List;
 
-public class Executor {
+public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private final Environment globals = new Environment();
   private Environment environment = globals;
   private final PrintStream out;
@@ -25,93 +25,137 @@ public class Executor {
     }
   }
 
-  void execute(Stmt stmt) {
-    if (stmt instanceof Stmt.Print s) {
-      Object value = evaluate(s.expression);
-      out.println(stringify(value));
-    } else if (stmt instanceof Stmt.VarDeclare s) {
-      Object value = evaluate(s.initializer);
-      environment.define(s.name.origin, value);
-    } else if (stmt instanceof Stmt.Expression s) {
-      evaluate(s.expression);
-    } else if (stmt instanceof Stmt.If s) {
-      if (isTruthy(evaluate(s.condition))) {
-        execute(s.thenBranch);
-      } else if (s.elseBranch != null) {
-        execute(s.elseBranch);
-      }
-    } else if (stmt instanceof Stmt.For s) {
-      Environment previous = this.environment;
-      this.environment = new Environment(previous);
-      try {
-        if (s.initializer != null) execute(s.initializer);
-        while (isTruthy(evaluate(s.condition))) {
-          execute(s.body);
-          if (s.increment != null) evaluate(s.increment);
-        }
-      } finally {
-        this.environment = previous;
-      }
-    } else if (stmt instanceof Stmt.Block s) {
-      Environment previous = this.environment;
-      this.environment = new Environment(previous);
-      try {
-        for (Stmt statement : s.statements) {
-          execute(statement);
-        }
-      } finally {
-        this.environment = previous;
-      }
-    }
+  private void execute(Stmt stmt) {
+    stmt.accept(this);
   }
 
-  Object evaluate(Expr expr) {
-    if (expr instanceof Expr.Literal e) {
-      return e.value;
-    }
-    if (expr instanceof Expr.Grouping e) {
-      return evaluate(e.expression);
-    }
-    if (expr instanceof Expr.Logical e) {
-      Object left = evaluate(e.left);
-      if (e.operator.origin.equals("and")) {
-        return isTruthy(left) ? evaluate(e.right) : left;
+  private Object evaluate(Expr expr) {
+    return expr.accept(this);
+  }
+
+  // ── Stmt Visitors ────────────────────────────────────────────────────────
+
+  @Override
+  public Void visitExpression(Stmt.Expression stmt) {
+    evaluate(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visitPrint(Stmt.Print stmt) {
+    Object value = evaluate(stmt.expression);
+    out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visitVarDeclare(Stmt.VarDeclare stmt) {
+    Object value = evaluate(stmt.initializer);
+    environment.define(stmt.name.origin, value);
+    return null;
+  }
+
+  @Override
+  public Void visitBlock(Stmt.Block stmt) {
+    Environment previous = this.environment;
+    this.environment = new Environment(previous);
+    try {
+      for (Stmt s : stmt.statements) {
+        execute(s);
       }
-      return isTruthy(left) ? left : evaluate(e.right);
+    } finally {
+      this.environment = previous;
     }
-    if (expr instanceof Expr.Unary e) {
-      Object right = evaluate(e.right);
-      if (e.operator.origin.equals("-")) return -(double) right;
-      if (e.operator.origin.equals("!")) return !isTruthy(right);
+    return null;
+  }
+
+  @Override
+  public Void visitIf(Stmt.If stmt) {
+    if (isTruthy(evaluate(stmt.condition))) {
+      execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      execute(stmt.elseBranch);
     }
-    if (expr instanceof Expr.Variable e) {
-      return environment.get(e.name.origin);
-    }
-    if (expr instanceof Expr.Assign e) {
-      Object value = evaluate(e.value);
-      environment.assign(e.name.origin, value);
-      return value;
-    }
-    if (expr instanceof Expr.Binary e) {
-      Object leftVal = evaluate(e.left);
-      Object rightVal = evaluate(e.right);
-      if (!(leftVal instanceof Double) || !(rightVal instanceof Double)) {
-        throw new RuntimeError("피연산자는 숫자여야 합니다");
+    return null;
+  }
+
+  @Override
+  public Void visitFor(Stmt.For stmt) {
+    Environment previous = this.environment;
+    this.environment = new Environment(previous);
+    try {
+      if (stmt.initializer != null) execute(stmt.initializer);
+      while (isTruthy(evaluate(stmt.condition))) {
+        execute(stmt.body);
+        if (stmt.increment != null) evaluate(stmt.increment);
       }
-      double left = (double) leftVal;
-      double right = (double) rightVal;
-      switch (e.operator.origin) {
-        case "+": return left + right;
-        case "-": return left - right;
-        case "*": return left * right;
-        case "/":
-          if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
-          return left / right;
-        case ">": return left > right;
-        case "<": return left < right;
-      }
+    } finally {
+      this.environment = previous;
     }
-    throw new UnsupportedOperationException("Not implemented yet");
+    return null;
+  }
+
+  // ── Expr Visitors ────────────────────────────────────────────────────────
+
+  @Override
+  public Object visitLiteral(Expr.Literal expr) {
+    return expr.value;
+  }
+
+  @Override
+  public Object visitVariable(Expr.Variable expr) {
+    return environment.get(expr.name.origin);
+  }
+
+  @Override
+  public Object visitAssign(Expr.Assign expr) {
+    Object value = evaluate(expr.value);
+    environment.assign(expr.name.origin, value);
+    return value;
+  }
+
+  @Override
+  public Object visitBinary(Expr.Binary expr) {
+    Object leftVal = evaluate(expr.left);
+    Object rightVal = evaluate(expr.right);
+    if (!(leftVal instanceof Double) || !(rightVal instanceof Double)) {
+      throw new RuntimeError("피연산자는 숫자여야 합니다");
+    }
+    double left = (double) leftVal;
+    double right = (double) rightVal;
+    switch (expr.operator.origin) {
+      case "+": return left + right;
+      case "-": return left - right;
+      case "*": return left * right;
+      case "/":
+        if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
+        return left / right;
+      case ">": return left > right;
+      case "<": return left < right;
+    }
+    throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.origin);
+  }
+
+  @Override
+  public Object visitUnary(Expr.Unary expr) {
+    Object right = evaluate(expr.right);
+    if (expr.operator.origin.equals("-")) return -(double) right;
+    if (expr.operator.origin.equals("!")) return !isTruthy(right);
+    throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.origin);
+  }
+
+  @Override
+  public Object visitLogical(Expr.Logical expr) {
+    Object left = evaluate(expr.left);
+    if (expr.operator.origin.equals("and")) {
+      return isTruthy(left) ? evaluate(expr.right) : left;
+    }
+    return isTruthy(left) ? left : evaluate(expr.right);
+  }
+
+  @Override
+  public Object visitGrouping(Expr.Grouping expr) {
+    return evaluate(expr.expression);
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
