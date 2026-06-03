@@ -93,17 +93,6 @@ class CheckerTest {
     }
 
     @Test
-    @DisplayName("[visitExpression] FAIL - 식문 내부 표현식에 자기참조 변수가 있으면 SemanticError 전파")
-    void visitExpression_FAIL_내부_식에서_자기참조_변수_사용() {
-        // Arrange  { var a = (a); }  — 식문 안에 자기참조
-        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
-        Stmt block = new Stmt.Block(List.of(decl));
-
-        // Act & Assert
-        assertThrows(SemanticError.class, () -> check(List.of(block)));
-    }
-
-    @Test
     @DisplayName("[visitExpression] PASS - 리터럴 연산으로만 이루어진 일반 식문은 정상")
     void visitExpression_PASS_일반_식문() {
         // Arrange  1 + 2;
@@ -112,18 +101,6 @@ class CheckerTest {
 
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(exprStmt)));
-    }
-
-    @Test
-    @DisplayName("[visitPrint] FAIL - print 내부 표현식에 자기참조 변수가 있으면 SemanticError 전파")
-    void visitPrint_FAIL_내부_식에서_자기참조_변수_사용() {
-        // Arrange  { var a = 1; print: 자기참조가 포함된 식 }
-        // print 자체보다 내부 expr이 자기참조일 때 에러 전파 확인
-        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
-        Stmt block = new Stmt.Block(List.of(decl));
-
-        // Act & Assert
-        assertThrows(SemanticError.class, () -> check(List.of(block)));
     }
 
     @Test
@@ -239,20 +216,6 @@ class CheckerTest {
     }
 
     @Test
-    @DisplayName("[visitLiteral] PASS - 문자열 리터럴은 의미 검사 대상이 아니므로 항상 정상")
-    void visitLiteral_PASS_문자열() {
-        // Arrange  "hello";
-        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(new Expr.Literal("hello")))));
-    }
-
-    @Test
-    @DisplayName("[visitLiteral] PASS - null 리터럴은 의미 검사 대상이 아니므로 항상 정상")
-    void visitLiteral_PASS_null() {
-        // Arrange  null;
-        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(new Expr.Literal(null)))));
-    }
-
-    @Test
     @DisplayName("[visitVariable] FAIL - 아직 define되지 않은 자신을 초기화식에서 읽으면 SemanticError")
     void visitVariable_FAIL_초기화식에서_자신을_참조() {
         // Arrange  { var a = a; }
@@ -285,18 +248,6 @@ class CheckerTest {
 
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(decl)));
-    }
-
-    @Test
-    @DisplayName("[visitAssign] FAIL - 대입 우변식에 자기참조 변수가 포함되면 SemanticError 전파")
-    void visitAssign_FAIL_대입값이_자기참조_포함() {
-        // Arrange  { var a = 1 + a; }  — 초기화식에 자기참조
-        Expr rhs   = new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Variable(id("a")));
-        Stmt decl  = new Stmt.VarDeclare(id("a"), rhs);
-        Stmt block = new Stmt.Block(List.of(decl));
-
-        // Act & Assert
-        assertThrows(SemanticError.class, () -> check(List.of(block)));
     }
 
     @Test

@@ -55,8 +55,19 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         define(stmt.name);
         return null;
     }
-    @Override public Void visitExpression(Stmt.Expression stmt)   { return null; }
-    @Override public Void visitPrint(Stmt.Print stmt)             { return null; }
+
+    @Override
+    public Void visitExpression(Stmt.Expression stmt) {
+        resolve(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrint(Stmt.Print stmt) {
+        resolve(stmt.expression);
+        return null;
+    }
+
     @Override
     public Void visitIf(Stmt.If stmt) {
         resolve(stmt.condition);
@@ -64,6 +75,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (stmt.elseBranch != null) resolve(stmt.elseBranch);
         return null;
     }
+
     @Override
     public Void visitFor(Stmt.For stmt) {
         beginScope();
@@ -85,7 +97,11 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return null;
     }
 
-    @Override public Void visitAssign(Expr.Assign expr)           { return null; }
+    @Override
+    public Void visitAssign(Expr.Assign expr) {
+        resolve(expr.value);
+        return null;
+    }
 
     @Override
     public Void visitBinary(Expr.Binary expr) {
