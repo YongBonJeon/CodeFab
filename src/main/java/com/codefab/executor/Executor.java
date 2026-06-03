@@ -1,21 +1,8 @@
 package com.codefab.executor;
 
-import com.codefab.error.RuntimeError;
-import com.codefab.ast.AssignExpr;
-import com.codefab.ast.BinaryExpr;
-import com.codefab.ast.BlockStmt;
 import com.codefab.ast.Expr;
-import com.codefab.ast.ExpressionStmt;
-import com.codefab.ast.ForStmt;
-import com.codefab.ast.GroupingExpr;
-import com.codefab.ast.IfStmt;
-import com.codefab.ast.LiteralExpr;
-import com.codefab.ast.LogicalExpr;
-import com.codefab.ast.PrintStmt;
 import com.codefab.ast.Stmt;
-import com.codefab.ast.UnaryExpr;
-import com.codefab.ast.VarDeclareStmt;
-import com.codefab.ast.VariableExpr;
+import com.codefab.error.RuntimeError;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -39,21 +26,21 @@ public class Executor {
   }
 
   void execute(Stmt stmt) {
-    if (stmt instanceof PrintStmt s) {
+    if (stmt instanceof Stmt.Print s) {
       Object value = evaluate(s.expression);
       out.println(stringify(value));
-    } else if (stmt instanceof VarDeclareStmt s) {
+    } else if (stmt instanceof Stmt.VarDeclare s) {
       Object value = evaluate(s.initializer);
-      environment.define(s.name, value);
-    } else if (stmt instanceof ExpressionStmt s) {
+      environment.define(s.name.origin, value);
+    } else if (stmt instanceof Stmt.Expression s) {
       evaluate(s.expression);
-    } else if (stmt instanceof IfStmt s) {
+    } else if (stmt instanceof Stmt.If s) {
       if (isTruthy(evaluate(s.condition))) {
         execute(s.thenBranch);
       } else if (s.elseBranch != null) {
         execute(s.elseBranch);
       }
-    } else if (stmt instanceof ForStmt s) {
+    } else if (stmt instanceof Stmt.For s) {
       Environment previous = this.environment;
       this.environment = new Environment(previous);
       try {
@@ -65,7 +52,7 @@ public class Executor {
       } finally {
         this.environment = previous;
       }
-    } else if (stmt instanceof BlockStmt s) {
+    } else if (stmt instanceof Stmt.Block s) {
       Environment previous = this.environment;
       this.environment = new Environment(previous);
       try {
@@ -79,33 +66,33 @@ public class Executor {
   }
 
   Object evaluate(Expr expr) {
-    if (expr instanceof LiteralExpr e) {
+    if (expr instanceof Expr.Literal e) {
       return e.value;
     }
-    if (expr instanceof GroupingExpr e) {
+    if (expr instanceof Expr.Grouping e) {
       return evaluate(e.expression);
     }
-    if (expr instanceof LogicalExpr e) {
+    if (expr instanceof Expr.Logical e) {
       Object left = evaluate(e.left);
-      if (e.op.equals("and")) {
+      if (e.operator.origin.equals("and")) {
         return isTruthy(left) ? evaluate(e.right) : left;
       }
       return isTruthy(left) ? left : evaluate(e.right);
     }
-    if (expr instanceof UnaryExpr e) {
+    if (expr instanceof Expr.Unary e) {
       Object right = evaluate(e.right);
-      if (e.op.equals("-")) return -(double) right;
-      if (e.op.equals("!")) return !isTruthy(right);
+      if (e.operator.origin.equals("-")) return -(double) right;
+      if (e.operator.origin.equals("!")) return !isTruthy(right);
     }
-    if (expr instanceof VariableExpr e) {
-      return environment.get(e.name);
+    if (expr instanceof Expr.Variable e) {
+      return environment.get(e.name.origin);
     }
-    if (expr instanceof AssignExpr e) {
+    if (expr instanceof Expr.Assign e) {
       Object value = evaluate(e.value);
-      environment.assign(e.name, value);
+      environment.assign(e.name.origin, value);
       return value;
     }
-    if (expr instanceof BinaryExpr e) {
+    if (expr instanceof Expr.Binary e) {
       Object leftVal = evaluate(e.left);
       Object rightVal = evaluate(e.right);
       if (!(leftVal instanceof Double) || !(rightVal instanceof Double)) {
@@ -113,7 +100,7 @@ public class Executor {
       }
       double left = (double) leftVal;
       double right = (double) rightVal;
-      switch (e.op) {
+      switch (e.operator.origin) {
         case "+": return left + right;
         case "-": return left - right;
         case "*": return left * right;
@@ -127,6 +114,8 @@ public class Executor {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
   private boolean isTruthy(Object value) {
     if (value == null) return false;
     if (value instanceof Boolean b) return b;
@@ -134,14 +123,10 @@ public class Executor {
   }
 
   private String stringify(Object value) {
-    if (value == null) {
-      return "nil";
-    }
+    if (value == null) return "nil";
     if (value instanceof Double d) {
       String text = d.toString();
-      if (text.endsWith(".0")) {
-        return text.substring(0, text.length() - 2);
-      }
+      if (text.endsWith(".0")) return text.substring(0, text.length() - 2);
       return text;
     }
     return value.toString();

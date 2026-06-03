@@ -3,22 +3,11 @@ package com.codefab.executor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.codefab.error.RuntimeError;
-
-import com.codefab.ast.AssignExpr;
-import com.codefab.ast.BinaryExpr;
-import com.codefab.ast.BlockStmt;
-import com.codefab.ast.ExpressionStmt;
-import com.codefab.ast.ForStmt;
-import com.codefab.ast.GroupingExpr;
-import com.codefab.ast.IfStmt;
-import com.codefab.ast.LogicalExpr;
-import com.codefab.ast.LiteralExpr;
-import com.codefab.ast.PrintStmt;
+import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
-import com.codefab.ast.UnaryExpr;
-import com.codefab.ast.VarDeclareStmt;
-import com.codefab.ast.VariableExpr;
+import com.codefab.error.RuntimeError;
+import com.codefab.token.Token;
+import com.codefab.token.TokenType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -45,11 +34,15 @@ class ExecutorTest {
     return outputStream.toString().trim().replace("\r\n", "\n");
   }
 
+  private Token token(TokenType type, String origin) {
+    return new Token(type, origin, null, 1);
+  }
+
   @Test
   @DisplayName("숫자 리터럴을 출력하면 정수 형태로 출력된다")
   void printNumberLiteral() {
     // given
-    Stmt stmt = new PrintStmt(new LiteralExpr(3.0));
+    Stmt stmt = new Stmt.Print(new Expr.Literal(3.0));
 
     // when
     executor.execute(List.of(stmt));
@@ -62,7 +55,7 @@ class ExecutorTest {
   @DisplayName("문자열 리터럴을 출력하면 따옴표 없이 출력된다")
   void printStringLiteral() {
     // given
-    Stmt stmt = new PrintStmt(new LiteralExpr("hello"));
+    Stmt stmt = new Stmt.Print(new Expr.Literal("hello"));
 
     // when
     executor.execute(List.of(stmt));
@@ -75,7 +68,7 @@ class ExecutorTest {
   @DisplayName("true를 출력하면 true가 출력된다")
   void printTrueLiteral() {
     // given
-    Stmt stmt = new PrintStmt(new LiteralExpr(true));
+    Stmt stmt = new Stmt.Print(new Expr.Literal(true));
 
     // when
     executor.execute(List.of(stmt));
@@ -88,7 +81,7 @@ class ExecutorTest {
   @DisplayName("false를 출력하면 false가 출력된다")
   void printFalseLiteral() {
     // given
-    Stmt stmt = new PrintStmt(new LiteralExpr(false));
+    Stmt stmt = new Stmt.Print(new Expr.Literal(false));
 
     // when
     executor.execute(List.of(stmt));
@@ -101,7 +94,9 @@ class ExecutorTest {
   @DisplayName("두 숫자를 더한 결과를 출력한다")
   void printAddition() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "+", new LiteralExpr(2.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(3.0), token(TokenType.PLUS, "+"), new Expr.Literal(2.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -114,7 +109,9 @@ class ExecutorTest {
   @DisplayName("두 숫자를 뺀 결과를 출력한다")
   void printSubtraction() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), "-", new LiteralExpr(2.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(5.0), token(TokenType.MINUS, "-"), new Expr.Literal(2.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -127,7 +124,9 @@ class ExecutorTest {
   @DisplayName("두 숫자를 곱한 결과를 출력한다")
   void printMultiplication() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "*", new LiteralExpr(4.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(3.0), token(TokenType.STAR, "*"), new Expr.Literal(4.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -140,7 +139,9 @@ class ExecutorTest {
   @DisplayName("두 숫자를 나눈 결과를 출력한다")
   void printDivision() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(10.0), "/", new LiteralExpr(2.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(10.0), token(TokenType.SLASH, "/"), new Expr.Literal(2.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -153,7 +154,9 @@ class ExecutorTest {
   @DisplayName("왼쪽이 오른쪽보다 크면 true를 출력한다")
   void printGreaterThanTrue() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), ">", new LiteralExpr(3.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(5.0), token(TokenType.GREATER, ">"), new Expr.Literal(3.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -166,7 +169,9 @@ class ExecutorTest {
   @DisplayName("왼쪽이 오른쪽보다 작거나 같으면 false를 출력한다")
   void printGreaterThanFalse() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), ">", new LiteralExpr(5.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(3.0), token(TokenType.GREATER, ">"), new Expr.Literal(5.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -179,7 +184,9 @@ class ExecutorTest {
   @DisplayName("왼쪽이 오른쪽보다 작으면 true를 출력한다")
   void printLessThanTrue() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(3.0), "<", new LiteralExpr(5.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(3.0), token(TokenType.LESS, "<"), new Expr.Literal(5.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -192,7 +199,9 @@ class ExecutorTest {
   @DisplayName("왼쪽이 오른쪽보다 크거나 같으면 false를 출력한다")
   void printLessThanFalse() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(5.0), "<", new LiteralExpr(3.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(5.0), token(TokenType.LESS, "<"), new Expr.Literal(3.0))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -205,8 +214,8 @@ class ExecutorTest {
   @DisplayName("변수를 선언하고 출력하면 초기값이 출력된다")
   void printDeclaredVariable() {
     // given
-    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(10.0));
-    Stmt printStmt = new PrintStmt(new VariableExpr("a"));
+    Stmt varStmt = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(10.0));
+    Stmt printStmt = new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "a")));
 
     // when
     executor.execute(List.of(varStmt, printStmt));
@@ -219,9 +228,11 @@ class ExecutorTest {
   @DisplayName("변수를 재할당하면 변경된 값이 출력된다")
   void printReassignedVariable() {
     // given
-    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(10.0));
-    Stmt assignStmt = new ExpressionStmt(new AssignExpr("a", new LiteralExpr(99.0)));
-    Stmt printStmt = new PrintStmt(new VariableExpr("a"));
+    Stmt varStmt = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(10.0));
+    Stmt assignStmt = new Stmt.Expression(
+        new Expr.Assign(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(99.0))
+    );
+    Stmt printStmt = new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "a")));
 
     // when
     executor.execute(List.of(varStmt, assignStmt, printStmt));
@@ -234,9 +245,9 @@ class ExecutorTest {
   @DisplayName("블록 안에서 외부 변수에 접근할 수 있다")
   void blockCanAccessOuterVariable() {
     // given
-    Stmt varStmt = new VarDeclareStmt("a", new LiteralExpr(5.0));
-    Stmt block = new BlockStmt(List.of(
-        new PrintStmt(new VariableExpr("a"))
+    Stmt varStmt = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(5.0));
+    Stmt block = new Stmt.Block(List.of(
+        new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "a")))
     ));
 
     // when
@@ -250,14 +261,14 @@ class ExecutorTest {
   @DisplayName("블록 안에서 선언한 변수는 블록 밖에서 접근할 수 없다")
   void blockVariableNotAccessibleOutside() {
     // given
-    Stmt block = new BlockStmt(List.of(
-        new VarDeclareStmt("a", new LiteralExpr(5.0))
+    Stmt block = new Stmt.Block(List.of(
+        new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(5.0))
     ));
 
     // when & then
     executor.execute(List.of(block));
     assertThrows(RuntimeError.class, () -> executor.execute(List.of(
-        new PrintStmt(new VariableExpr("a"))
+        new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "a")))
     )));
   }
 
@@ -265,9 +276,9 @@ class ExecutorTest {
   @DisplayName("조건이 참이면 then 블록을 실행한다")
   void ifExecutesThenWhenTrue() {
     // given
-    Stmt ifStmt = new IfStmt(
-        new LiteralExpr(true),
-        new PrintStmt(new LiteralExpr("then")),
+    Stmt ifStmt = new Stmt.If(
+        new Expr.Literal(true),
+        new Stmt.Print(new Expr.Literal("then")),
         null
     );
 
@@ -282,10 +293,10 @@ class ExecutorTest {
   @DisplayName("조건이 거짓이면 else 블록을 실행한다")
   void ifExecutesElseWhenFalse() {
     // given
-    Stmt ifStmt = new IfStmt(
-        new LiteralExpr(false),
-        new PrintStmt(new LiteralExpr("then")),
-        new PrintStmt(new LiteralExpr("else"))
+    Stmt ifStmt = new Stmt.If(
+        new Expr.Literal(false),
+        new Stmt.Print(new Expr.Literal("then")),
+        new Stmt.Print(new Expr.Literal("else"))
     );
 
     // when
@@ -299,9 +310,9 @@ class ExecutorTest {
   @DisplayName("조건이 거짓이고 else가 없으면 아무것도 실행하지 않는다")
   void ifDoesNothingWhenFalseAndNoElse() {
     // given
-    Stmt ifStmt = new IfStmt(
-        new LiteralExpr(false),
-        new PrintStmt(new LiteralExpr("then")),
+    Stmt ifStmt = new Stmt.If(
+        new Expr.Literal(false),
+        new Stmt.Print(new Expr.Literal("then")),
         null
     );
 
@@ -316,7 +327,7 @@ class ExecutorTest {
   @DisplayName("숫자에 단항 minus를 적용하면 부호가 반전된다")
   void unaryMinusNegatesNumber() {
     // given
-    Stmt stmt = new PrintStmt(new UnaryExpr("-", new LiteralExpr(5.0)));
+    Stmt stmt = new Stmt.Print(new Expr.Unary(token(TokenType.MINUS, "-"), new Expr.Literal(5.0)));
 
     // when
     executor.execute(List.of(stmt));
@@ -329,7 +340,7 @@ class ExecutorTest {
   @DisplayName("true에 논리 not을 적용하면 false가 출력된다")
   void unaryNotNegatesBoolean() {
     // given
-    Stmt stmt = new PrintStmt(new UnaryExpr("!", new LiteralExpr(true)));
+    Stmt stmt = new Stmt.Print(new Expr.Unary(token(TokenType.BANG, "!"), new Expr.Literal(true)));
 
     // when
     executor.execute(List.of(stmt));
@@ -343,11 +354,13 @@ class ExecutorTest {
   void evaluatesGroupingExpr() {
     // given
     // (2 + 3) * 4 = 20
-    Stmt stmt = new PrintStmt(
-        new BinaryExpr(
-            new GroupingExpr(new BinaryExpr(new LiteralExpr(2.0), "+", new LiteralExpr(3.0))),
-            "*",
-            new LiteralExpr(4.0)
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(
+            new Expr.Grouping(
+                new Expr.Binary(new Expr.Literal(2.0), token(TokenType.PLUS, "+"), new Expr.Literal(3.0))
+            ),
+            token(TokenType.STAR, "*"),
+            new Expr.Literal(4.0)
         )
     );
 
@@ -362,7 +375,9 @@ class ExecutorTest {
   @DisplayName("true and true 는 true 를 반환한다")
   void andReturnsTrueWhenBothTrue() {
     // given
-    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(true), "and", new LiteralExpr(true)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Logical(new Expr.Literal(true), token(TokenType.AND, "and"), new Expr.Literal(true))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -375,7 +390,9 @@ class ExecutorTest {
   @DisplayName("false and 는 오른쪽을 평가하지 않고 false 를 반환한다")
   void andShortCircuitsOnFalse() {
     // given
-    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(false), "and", new LiteralExpr(true)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Logical(new Expr.Literal(false), token(TokenType.AND, "and"), new Expr.Literal(true))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -388,7 +405,9 @@ class ExecutorTest {
   @DisplayName("true or 는 오른쪽을 평가하지 않고 true 를 반환한다")
   void orShortCircuitsOnTrue() {
     // given
-    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(true), "or", new LiteralExpr(false)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Logical(new Expr.Literal(true), token(TokenType.OR, "or"), new Expr.Literal(false))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -401,7 +420,9 @@ class ExecutorTest {
   @DisplayName("false or false 는 false 를 반환한다")
   void orReturnsFalseWhenBothFalse() {
     // given
-    Stmt stmt = new PrintStmt(new LogicalExpr(new LiteralExpr(false), "or", new LiteralExpr(false)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Logical(new Expr.Literal(false), token(TokenType.OR, "or"), new Expr.Literal(false))
+    );
 
     // when
     executor.execute(List.of(stmt));
@@ -415,11 +436,12 @@ class ExecutorTest {
   void forLoopExecutesBodyWhileConditionIsTrue() {
     // given
     // for (var i = 0; i < 3; i = i + 1) { print i; }
-    Stmt forStmt = new ForStmt(
-        new VarDeclareStmt("i", new LiteralExpr(0.0)),
-        new BinaryExpr(new VariableExpr("i"), "<", new LiteralExpr(3.0)),
-        new AssignExpr("i", new BinaryExpr(new VariableExpr("i"), "+", new LiteralExpr(1.0))),
-        new BlockStmt(List.of(new PrintStmt(new VariableExpr("i"))))
+    Stmt forStmt = new Stmt.For(
+        new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "i"), new Expr.Literal(0.0)),
+        new Expr.Binary(new Expr.Variable(token(TokenType.IDENTIFIER, "i")), token(TokenType.LESS, "<"), new Expr.Literal(3.0)),
+        new Expr.Assign(token(TokenType.IDENTIFIER, "i"),
+            new Expr.Binary(new Expr.Variable(token(TokenType.IDENTIFIER, "i")), token(TokenType.PLUS, "+"), new Expr.Literal(1.0))),
+        new Stmt.Block(List.of(new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "i")))))
     );
 
     // when
@@ -433,12 +455,12 @@ class ExecutorTest {
   @DisplayName("for 문은 처음부터 조건이 거짓이면 body 를 실행하지 않는다")
   void forLoopSkipsBodyWhenConditionIsFalseFromStart() {
     // given
-    // for (var i = 0; i < 0; i = i + 1) { print i; }
-    Stmt forStmt = new ForStmt(
-        new VarDeclareStmt("i", new LiteralExpr(0.0)),
-        new BinaryExpr(new VariableExpr("i"), "<", new LiteralExpr(0.0)),
-        new AssignExpr("i", new BinaryExpr(new VariableExpr("i"), "+", new LiteralExpr(1.0))),
-        new BlockStmt(List.of(new PrintStmt(new VariableExpr("i"))))
+    Stmt forStmt = new Stmt.For(
+        new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "i"), new Expr.Literal(0.0)),
+        new Expr.Binary(new Expr.Variable(token(TokenType.IDENTIFIER, "i")), token(TokenType.LESS, "<"), new Expr.Literal(0.0)),
+        new Expr.Assign(token(TokenType.IDENTIFIER, "i"),
+            new Expr.Binary(new Expr.Variable(token(TokenType.IDENTIFIER, "i")), token(TokenType.PLUS, "+"), new Expr.Literal(1.0))),
+        new Stmt.Block(List.of(new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "i")))))
     );
 
     // when
@@ -452,7 +474,9 @@ class ExecutorTest {
   @DisplayName("숫자가 아닌 값에 산술 연산을 하면 RuntimeError 가 발생한다")
   void arithmeticOnNonNumberThrowsRuntimeError() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr("hello"), "-", new LiteralExpr(1.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal("hello"), token(TokenType.MINUS, "-"), new Expr.Literal(1.0))
+    );
 
     // when & then
     assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
@@ -462,7 +486,9 @@ class ExecutorTest {
   @DisplayName("0 으로 나누면 RuntimeError 가 발생한다")
   void divisionByZeroThrowsRuntimeError() {
     // given
-    Stmt stmt = new PrintStmt(new BinaryExpr(new LiteralExpr(10.0), "/", new LiteralExpr(0.0)));
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(10.0), token(TokenType.SLASH, "/"), new Expr.Literal(0.0))
+    );
 
     // when & then
     assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
@@ -472,7 +498,7 @@ class ExecutorTest {
   @DisplayName("선언하지 않은 변수를 참조하면 RuntimeError 가 발생한다")
   void undefinedVariableThrowsRuntimeError() {
     // given
-    Stmt stmt = new PrintStmt(new VariableExpr("x"));
+    Stmt stmt = new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "x")));
 
     // when & then
     assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
