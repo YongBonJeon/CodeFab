@@ -31,7 +31,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             throw new SemanticError(name.line,
                     "'" + name.origin + "' 에러: 이미 해당 변수는 현재 스코프에서 사용중입니다.");
         }
-        scope.put(name.origin, Boolean.TRUE);
+        scope.put(name.origin, Boolean.FALSE);
     }
 
     @Override
@@ -45,6 +45,8 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitVarDeclare(Stmt.VarDeclare stmt) {
         declare(stmt.name);
+        if (stmt.initializer != null) resolve(stmt.initializer);
+        if (!scopes.isEmpty()) scopes.peek().put(stmt.name.origin, Boolean.TRUE);
         return null;
     }
     @Override public Void visitExpression(Stmt.Expression stmt) { return null; }
@@ -52,9 +54,22 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override public Void visitIf(Stmt.If stmt)                 { return null; }
     @Override public Void visitFor(Stmt.For stmt)               { return null; }
     @Override public Void visitLiteral(Expr.Literal expr)       { return null; }
-    @Override public Void visitVariable(Expr.Variable expr)     { return null; }
+    @Override
+    public Void visitVariable(Expr.Variable expr) {
+        if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
+            throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
+        }
+        return null;
+    }
+
     @Override public Void visitAssign(Expr.Assign expr)         { return null; }
-    @Override public Void visitBinary(Expr.Binary expr)         { return null; }
+
+    @Override
+    public Void visitBinary(Expr.Binary expr) {
+        resolve(expr.left);
+        resolve(expr.right);
+        return null;
+    }
     @Override public Void visitUnary(Expr.Unary expr)           { return null; }
     @Override public Void visitLogical(Expr.Logical expr)       { return null; }
     @Override public Void visitGrouping(Expr.Grouping expr)     { return null; }
