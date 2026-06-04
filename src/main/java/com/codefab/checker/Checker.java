@@ -16,7 +16,9 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 
     public void check(List<Stmt> statements) {
+        beginScope();
         for (Stmt s : statements) resolve(s);
+        endScope();
     }
 
     private void resolve(Stmt stmt) {
@@ -36,7 +38,6 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void declare(Token name) {
-        if (scopes.isEmpty()) return;
         Map<String, Boolean> scope = scopes.peek();
         if (scope.containsKey(name.origin)) {
             throw new SemanticError(name.line,
@@ -46,7 +47,6 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void define(Token name) {
-        if (scopes.isEmpty()) return;
         scopes.peek().put(name.origin, Boolean.TRUE);
     }
 
