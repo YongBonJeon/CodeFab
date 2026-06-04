@@ -26,7 +26,7 @@ class CheckerTest {
         new Checker().check(stmts);
     }
 
-    // ── Cycle 1: visitBlock 재선언 ───────────────────────────────────────
+    // ── Cycle 1: visitBlock 재선언 ──────────────────────────────────────
 
     @Test
     @DisplayName("[visitBlock] FAIL - 같은 블록 스코프에서 동일 이름 변수를 두 번 선언하면 SemanticError")
@@ -53,5 +53,81 @@ class CheckerTest {
 
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(block)));
+    }
+
+    // ── Cycle 2: visitVarDeclare/visitVariable 자기참조 ─────────────────
+
+    @Test
+    @DisplayName("[visitVarDeclare] FAIL - 초기화식에서 선언 중인 변수 자신을 참조하면 SemanticError")
+    void visitVarDeclare_FAIL_자신의_초기화식에서_자신을_참조() {
+        // Arrange  { var a = a + 1; }
+        Expr selfRef = new Expr.Variable(id("a"));
+        Expr init    = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Stmt decl    = new Stmt.VarDeclare(id("a"), init);
+        Stmt block   = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        SemanticError ex = assertThrows(SemanticError.class,
+                () -> check(List.of(block)));
+        assertTrue(ex.getMessage().contains("초기화식"));
+    }
+
+    @Test
+    @DisplayName("[visitVarDeclare] PASS - initializer 없이 변수만 선언하는 경우 정상")
+    void visitVarDeclare_PASS_initializer_없이_선언() {
+        // Arrange  { var a; }
+        Stmt decl  = new Stmt.VarDeclare(id("a"), null);
+        Stmt block = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitVarDeclare] PASS - 이미 선언된 다른 변수를 초기화식에서 사용하는 경우 정상")
+    void visitVarDeclare_PASS_다른_변수로_초기화() {
+        // Arrange  { var a = 1; var b = a + 2; }
+        Stmt declA = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Expr init  = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(2));
+        Stmt declB = new Stmt.VarDeclare(id("b"), init);
+        Stmt block = new Stmt.Block(List.of(declA, declB));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitVariable] FAIL - 아직 define되지 않은 자신을 초기화식에서 읽으면 SemanticError")
+    void visitVariable_FAIL_초기화식에서_자신을_참조() {
+        // Arrange  { var a = a; }
+        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
+        Stmt block = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        SemanticError ex = assertThrows(SemanticError.class,
+                () -> check(List.of(block)));
+        assertTrue(ex.getMessage().contains("초기화식"));
+    }
+
+    @Test
+    @DisplayName("[visitVariable] PASS - define 완료된 변수를 이후 식에서 참조하는 경우 정상")
+    void visitVariable_PASS_선언된_후_참조() {
+        // Arrange  { var a = 1; var b = a; }
+        Stmt declA = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt declB = new Stmt.VarDeclare(id("b"), new Expr.Variable(id("a")));
+        Stmt block = new Stmt.Block(List.of(declA, declB));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitVariable] PASS - 전역 스코프에서 변수 참조는 검사하지 않으므로 정상")
+    void visitVariable_PASS_전역_변수_참조() {
+        // Arrange  var a = a;  (블록 없음 = 전역)
+        Stmt decl = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(decl)));
     }
 }
