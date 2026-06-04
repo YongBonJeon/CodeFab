@@ -21,24 +21,30 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void resolve(Stmt stmt) { stmt.accept(this); }
     private void resolve(Expr expr) { expr.accept(this); }
 
+    private void beginScope() { scopes.push(new HashMap<>()); }
+    private void endScope()   { scopes.pop(); }
+
+    private void declare(Token name) {
+        if (scopes.isEmpty()) return;
+        Map<String, Boolean> scope = scopes.peek();
+        if (scope.containsKey(name.origin)) {
+            throw new SemanticError(name.line,
+                    "'" + name.origin + "' 에러: 이미 해당 변수는 현재 스코프에서 사용중입니다.");
+        }
+        scope.put(name.origin, Boolean.TRUE);
+    }
+
     @Override
     public Void visitBlock(Stmt.Block stmt) {
-        scopes.push(new HashMap<>());
+        beginScope();
         for (Stmt s : stmt.statements) resolve(s);
-        scopes.pop();
+        endScope();
         return null;
     }
 
     @Override
     public Void visitVarDeclare(Stmt.VarDeclare stmt) {
-        if (!scopes.isEmpty()) {
-            Map<String, Boolean> scope = scopes.peek();
-            if (scope.containsKey(stmt.name.origin)) {
-                throw new SemanticError(stmt.name.line,
-                        "'" + stmt.name.origin + "' 에러: 이미 해당 변수는 현재 스코프에서 사용중입니다.");
-            }
-            scope.put(stmt.name.origin, Boolean.TRUE);
-        }
+        declare(stmt.name);
         return null;
     }
     @Override public Void visitExpression(Stmt.Expression stmt) { return null; }
