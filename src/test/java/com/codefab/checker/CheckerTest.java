@@ -174,4 +174,53 @@ class CheckerTest {
     void visitLiteral_PASS_숫자() {
         assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(new Expr.Literal(42)))));
     }
+
+    // ── Cycle 4: visitFor ────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[visitFor] FAIL - for 초기화식에서 선언 중인 변수 자신을 참조하면 SemanticError")
+    void visitFor_FAIL_초기화식에서_자신을_참조() {
+        // Arrange  for (var i = i + 1; i < 3; i = i + 1) print i;
+        Expr selfRef   = new Expr.Variable(id("i"));
+        Expr initExpr  = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Stmt forInit   = new Stmt.VarDeclare(id("i"), initExpr);
+        Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
+        Expr increment = new Expr.Assign(id("i"),
+                new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.PLUS, "+"), new Expr.Literal(1)));
+        Stmt body      = new Stmt.Print(new Expr.Variable(id("i")));
+        Stmt forStmt   = new Stmt.For(forInit, condition, increment, body);
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(forStmt)));
+    }
+
+    @Test
+    @DisplayName("[visitFor] FAIL - for body 블록 내에서 동일 이름 변수를 재선언하면 SemanticError")
+    void visitFor_FAIL_body_블록에서_변수_재선언() {
+        // Arrange  for (...) { var x = 1; var x = 2; }
+        Stmt forInit   = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
+        Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
+        Stmt body      = new Stmt.Block(List.of(
+                new Stmt.VarDeclare(id("x"), new Expr.Literal(1)),
+                new Stmt.VarDeclare(id("x"), new Expr.Literal(2))));
+        Stmt forStmt   = new Stmt.For(forInit, condition, null, body);
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(forStmt)));
+    }
+
+    @Test
+    @DisplayName("[visitFor] PASS - 초기화·조건·증감·body가 올바른 for 루프는 정상")
+    void visitFor_PASS_정상적인_for_루프() {
+        // Arrange  for (var i = 0; i < 3; i = i + 1) print i;
+        Stmt forInit   = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
+        Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
+        Expr increment = new Expr.Assign(id("i"),
+                new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.PLUS, "+"), new Expr.Literal(1)));
+        Stmt body      = new Stmt.Print(new Expr.Variable(id("i")));
+        Stmt forStmt   = new Stmt.For(forInit, condition, increment, body);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(forStmt)));
+    }
 }
