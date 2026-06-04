@@ -104,7 +104,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
+        if (Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
             throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
         }
         return null;
