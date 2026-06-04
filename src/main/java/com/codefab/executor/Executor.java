@@ -3,6 +3,7 @@ package com.codefab.executor;
 import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
 import com.codefab.error.RuntimeError;
+import com.codefab.token.TokenType;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -125,40 +126,40 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     checkNumberOperands(leftVal, rightVal);
     double left = (double) leftVal;
     double right = (double) rightVal;
-    return switch (expr.operator.origin) {
-      case "+" -> left + right;
-      case "-" -> left - right;
-      case "*" -> left * right;
-      case "/" -> {
+    return switch (expr.operator.type) {
+      case PLUS -> left + right;
+      case MINUS -> left - right;
+      case STAR -> left * right;
+      case SLASH -> {
         if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
         yield left / right;
       }
-      case ">" -> left > right;
-      case "<" -> left < right;
-      default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.origin);
+      case GREATER -> left > right;
+      case LESS -> left < right;
+      default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.type);
     };
   }
 
   @Override
   public Object visitUnary(Expr.Unary expr) {
     Object right = evaluate(expr.right);
-    return switch (expr.operator.origin) {
-      case "-" -> {
+    return switch (expr.operator.type) {
+      case MINUS -> {
         checkNumberOperand(right);
         yield -(double) right;
       }
-      case "!" -> !isTruthy(right);
-      default -> throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.origin);
+      case BANG -> !isTruthy(right);
+      default -> throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.type);
     };
   }
 
   @Override
   public Object visitLogical(Expr.Logical expr) {
     Object left = evaluate(expr.left);
-    return switch (expr.operator.origin) {
-      case "and" -> isTruthy(left) ? evaluate(expr.right) : left;
-      case "or" -> isTruthy(left) ? left : evaluate(expr.right);
-      default -> throw new UnsupportedOperationException("지원하지 않는 논리 연산자: " + expr.operator.origin);
+    return switch (expr.operator.type) {
+      case AND -> isTruthy(left) ? evaluate(expr.right) : left;
+      case OR -> isTruthy(left) ? left : evaluate(expr.right);
+      default -> throw new UnsupportedOperationException("지원하지 않는 논리 연산자: " + expr.operator.type);
     };
   }
 
