@@ -1,0 +1,15 @@
+var greeting = "Hello, World!";
+print greeting;
+
+print 3 + 7 * 5;            // 38
+
+var x = 10;
+if (x > 5) print "big"; else print "small";
+
+for (var i = 0; i < 3; i = i + 1) {
+    print i;
+}
+
+var a = 1;
+{ var a = 99; print a; }    // 99 (내부 스코프)
+print a;                    // 1  (전역)
