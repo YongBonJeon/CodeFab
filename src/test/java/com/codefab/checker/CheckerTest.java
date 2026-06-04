@@ -168,4 +168,10 @@ class CheckerTest {
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(ifStmt)));
     }
+
+    @Test
+    @DisplayName("[visitLiteral] PASS - 리터럴은 의미 검사 대상이 아니므로 항상 정상")
+    void visitLiteral_PASS_숫자() {
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(new Expr.Literal(42)))));
+    }
 }
