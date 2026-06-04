@@ -15,10 +15,12 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 
+    public Checker() {
+        beginScope();  // 전역 스코프 - 인스턴스 생명주기 동안 유지
+    }
+
     public void check(List<Stmt> statements) {
-        beginScope();
         for (Stmt s : statements) resolve(s);
-        endScope();
     }
 
     private void resolve(Stmt stmt) {
