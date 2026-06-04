@@ -62,9 +62,9 @@ class CheckerTest {
     void visitVarDeclare_FAIL_자신의_초기화식에서_자신을_참조() {
         // Arrange  { var a = a + 1; }
         Expr selfRef = new Expr.Variable(id("a"));
-        Expr init    = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
-        Stmt decl    = new Stmt.VarDeclare(id("a"), init);
-        Stmt block   = new Stmt.Block(List.of(decl));
+        Expr init = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Stmt decl = new Stmt.VarDeclare(id("a"), init);
+        Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
         SemanticError ex = assertThrows(SemanticError.class,
@@ -76,7 +76,7 @@ class CheckerTest {
     @DisplayName("[visitVarDeclare] PASS - initializer 없이 변수만 선언하는 경우 정상")
     void visitVarDeclare_PASS_initializer_없이_선언() {
         // Arrange  { var a; }
-        Stmt decl  = new Stmt.VarDeclare(id("a"), null);
+        Stmt decl = new Stmt.VarDeclare(id("a"), null);
         Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
@@ -88,7 +88,7 @@ class CheckerTest {
     void visitVarDeclare_PASS_다른_변수로_초기화() {
         // Arrange  { var a = 1; var b = a + 2; }
         Stmt declA = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
-        Expr init  = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(2));
+        Expr init = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(2));
         Stmt declB = new Stmt.VarDeclare(id("b"), init);
         Stmt block = new Stmt.Block(List.of(declA, declB));
 
@@ -100,7 +100,7 @@ class CheckerTest {
     @DisplayName("[visitVariable] FAIL - 아직 define되지 않은 자신을 초기화식에서 읽으면 SemanticError")
     void visitVariable_FAIL_초기화식에서_자신을_참조() {
         // Arrange  { var a = a; }
-        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
+        Stmt decl = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
         Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
@@ -137,10 +137,10 @@ class CheckerTest {
     @DisplayName("[visitIf] FAIL - then 블록 내에서 동일 이름 변수를 재선언하면 SemanticError")
     void visitIf_FAIL_then_블록에서_변수_재선언() {
         // Arrange  if (true) { var a = 1; var a = 2; }
-        Stmt decl1     = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
-        Stmt decl2     = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
         Stmt thenBlock = new Stmt.Block(List.of(decl1, decl2));
-        Stmt ifStmt    = new Stmt.If(new Expr.Literal(true), thenBlock, null);
+        Stmt ifStmt = new Stmt.If(new Expr.Literal(true), thenBlock, null);
 
         // Act & Assert
         assertThrows(SemanticError.class, () -> check(List.of(ifStmt)));
@@ -152,7 +152,7 @@ class CheckerTest {
         // Arrange  if (true) { var a = 1; } else { var a = 2; }
         Stmt thenBlock = new Stmt.Block(List.of(new Stmt.VarDeclare(id("a"), new Expr.Literal(1))));
         Stmt elseBlock = new Stmt.Block(List.of(new Stmt.VarDeclare(id("a"), new Expr.Literal(2))));
-        Stmt ifStmt    = new Stmt.If(new Expr.Literal(true), thenBlock, elseBlock);
+        Stmt ifStmt = new Stmt.If(new Expr.Literal(true), thenBlock, elseBlock);
 
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(ifStmt)));
@@ -181,14 +181,14 @@ class CheckerTest {
     @DisplayName("[visitFor] FAIL - for 초기화식에서 선언 중인 변수 자신을 참조하면 SemanticError")
     void visitFor_FAIL_초기화식에서_자신을_참조() {
         // Arrange  for (var i = i + 1; i < 3; i = i + 1) print i;
-        Expr selfRef   = new Expr.Variable(id("i"));
-        Expr initExpr  = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
-        Stmt forInit   = new Stmt.VarDeclare(id("i"), initExpr);
+        Expr selfRef = new Expr.Variable(id("i"));
+        Expr initExpr = new Expr.Binary(selfRef, op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Stmt forInit = new Stmt.VarDeclare(id("i"), initExpr);
         Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
         Expr increment = new Expr.Assign(id("i"),
                 new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.PLUS, "+"), new Expr.Literal(1)));
-        Stmt body      = new Stmt.Print(new Expr.Variable(id("i")));
-        Stmt forStmt   = new Stmt.For(forInit, condition, increment, body);
+        Stmt body = new Stmt.Print(new Expr.Variable(id("i")));
+        Stmt forStmt = new Stmt.For(forInit, condition, increment, body);
 
         // Act & Assert
         assertThrows(SemanticError.class, () -> check(List.of(forStmt)));
@@ -198,12 +198,12 @@ class CheckerTest {
     @DisplayName("[visitFor] FAIL - for body 블록 내에서 동일 이름 변수를 재선언하면 SemanticError")
     void visitFor_FAIL_body_블록에서_변수_재선언() {
         // Arrange  for (...) { var x = 1; var x = 2; }
-        Stmt forInit   = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
+        Stmt forInit = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
         Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
-        Stmt body      = new Stmt.Block(List.of(
+        Stmt body = new Stmt.Block(List.of(
                 new Stmt.VarDeclare(id("x"), new Expr.Literal(1)),
                 new Stmt.VarDeclare(id("x"), new Expr.Literal(2))));
-        Stmt forStmt   = new Stmt.For(forInit, condition, null, body);
+        Stmt forStmt = new Stmt.For(forInit, condition, null, body);
 
         // Act & Assert
         assertThrows(SemanticError.class, () -> check(List.of(forStmt)));
@@ -213,12 +213,12 @@ class CheckerTest {
     @DisplayName("[visitFor] PASS - 초기화·조건·증감·body가 올바른 for 루프는 정상")
     void visitFor_PASS_정상적인_for_루프() {
         // Arrange  for (var i = 0; i < 3; i = i + 1) print i;
-        Stmt forInit   = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
+        Stmt forInit = new Stmt.VarDeclare(id("i"), new Expr.Literal(0));
         Expr condition = new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.LESS, "<"), new Expr.Literal(3));
         Expr increment = new Expr.Assign(id("i"),
                 new Expr.Binary(new Expr.Variable(id("i")), op(TokenType.PLUS, "+"), new Expr.Literal(1)));
-        Stmt body      = new Stmt.Print(new Expr.Variable(id("i")));
-        Stmt forStmt   = new Stmt.For(forInit, condition, increment, body);
+        Stmt body = new Stmt.Print(new Expr.Variable(id("i")));
+        Stmt forStmt = new Stmt.For(forInit, condition, increment, body);
 
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(forStmt)));
@@ -231,7 +231,7 @@ class CheckerTest {
     void visitUnary_FAIL_피연산자에_자기참조() {
         // Arrange  { var a = -a; }
         Expr unary = new Expr.Unary(op(TokenType.MINUS, "-"), new Expr.Variable(id("a")));
-        Stmt decl  = new Stmt.VarDeclare(id("a"), unary);
+        Stmt decl = new Stmt.VarDeclare(id("a"), unary);
         Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
@@ -251,8 +251,8 @@ class CheckerTest {
     void visitLogical_FAIL_피연산자에_자기참조() {
         // Arrange  { var a = a && true; }
         Expr logical = new Expr.Logical(new Expr.Variable(id("a")), op(TokenType.AND, "&&"), new Expr.Literal(true));
-        Stmt decl    = new Stmt.VarDeclare(id("a"), logical);
-        Stmt block   = new Stmt.Block(List.of(decl));
+        Stmt decl = new Stmt.VarDeclare(id("a"), logical);
+        Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
         assertThrows(SemanticError.class, () -> check(List.of(block)));
@@ -271,8 +271,8 @@ class CheckerTest {
     void visitGrouping_FAIL_괄호_안에_자기참조() {
         // Arrange  { var a = (a); }
         Expr grouping = new Expr.Grouping(new Expr.Variable(id("a")));
-        Stmt decl     = new Stmt.VarDeclare(id("a"), grouping);
-        Stmt block    = new Stmt.Block(List.of(decl));
+        Stmt decl = new Stmt.VarDeclare(id("a"), grouping);
+        Stmt block = new Stmt.Block(List.of(decl));
 
         // Act & Assert
         assertThrows(SemanticError.class, () -> check(List.of(block)));
@@ -291,7 +291,7 @@ class CheckerTest {
     @DisplayName("[visitBinary] FAIL - 이항 연산자의 피연산자에 자기참조 변수가 있으면 SemanticError 전파")
     void visitBinary_FAIL_피연산자에_자기참조() {
         // Arrange  { var a = a + 1; }
-        Expr bin  = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Expr bin = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(1));
         Stmt decl = new Stmt.VarDeclare(id("a"), bin);
         Stmt block = new Stmt.Block(List.of(decl));
 
@@ -328,7 +328,7 @@ class CheckerTest {
     @DisplayName("[visitPrint] PASS - 선언 완료된 변수를 print 문에서 사용하는 경우 정상")
     void visitPrint_PASS_선언된_변수_출력() {
         // Arrange  { var a = 1; print a; }
-        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
         Stmt print = new Stmt.Print(new Expr.Variable(id("a")));
         Stmt block = new Stmt.Block(List.of(decl, print));
         assertDoesNotThrow(() -> check(List.of(block)));
@@ -338,9 +338,9 @@ class CheckerTest {
     @DisplayName("[visitAssign] PASS - 선언 완료 후 다른 값을 재대입하는 경우 정상")
     void visitAssign_PASS_선언_후_재대입() {
         // Arrange  { var a = 1; a = 2; }
-        Stmt decl   = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
         Stmt assign = new Stmt.Expression(new Expr.Assign(id("a"), new Expr.Literal(2)));
-        Stmt block  = new Stmt.Block(List.of(decl, assign));
+        Stmt block = new Stmt.Block(List.of(decl, assign));
         assertDoesNotThrow(() -> check(List.of(block)));
     }
 }

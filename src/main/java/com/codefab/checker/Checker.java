@@ -3,6 +3,7 @@ package com.codefab.checker;
 import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
 import com.codefab.error.SemanticError;
+import com.codefab.token.Token;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -18,11 +19,21 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Stmt s : statements) resolve(s);
     }
 
-    private void resolve(Stmt stmt) { stmt.accept(this); }
-    private void resolve(Expr expr) { expr.accept(this); }
+    private void resolve(Stmt stmt) {
+        stmt.accept(this);
+    }
 
-    private void beginScope() { scopes.push(new HashMap<>()); }
-    private void endScope()   { scopes.pop(); }
+    private void resolve(Expr expr) {
+        expr.accept(this);
+    }
+
+    private void beginScope() {
+        scopes.push(new HashMap<>());
+    }
+
+    private void endScope() {
+        scopes.pop();
+    }
 
     private void declare(Token name) {
         if (scopes.isEmpty()) return;
@@ -54,6 +65,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         define(stmt.name);
         return null;
     }
+
     @Override
     public Void visitExpression(Stmt.Expression stmt) {
         resolve(stmt.expression);
@@ -65,6 +77,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(stmt.expression);
         return null;
     }
+
     @Override
     public Void visitIf(Stmt.If stmt) {
         resolve(stmt.condition);
@@ -72,6 +85,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (stmt.elseBranch != null) resolve(stmt.elseBranch);
         return null;
     }
+
     @Override
     public Void visitFor(Stmt.For stmt) {
         beginScope();
@@ -82,10 +96,12 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         return null;
     }
+
     @Override
     public Void visitLiteral(Expr.Literal expr) {
         return null;
     }
+
     @Override
     public Void visitVariable(Expr.Variable expr) {
         if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
@@ -106,6 +122,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(expr.right);
         return null;
     }
+
     @Override
     public Void visitUnary(Expr.Unary expr) {
         resolve(expr.right);
