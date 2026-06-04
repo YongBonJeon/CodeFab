@@ -471,6 +471,46 @@ class ExecutorTest {
   }
 
   @Test
+  @DisplayName("두 문자열을 + 로 연결하면 이어붙인 결과가 출력된다")
+  void printStringConcatenation() {
+    // given
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal("Hello"), token(TokenType.PLUS, "+"), new Expr.Literal(" World"))
+    );
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("Hello World", output());
+  }
+
+  @Test
+  @DisplayName("중첩 스코프에서 바깥 변수와 안쪽 변수를 문자열 연결해 출력한다")
+  void nestedScopeStringConcatenation() {
+    // given
+    // var outer = "A";
+    // { var inner = "B"; { print outer + inner; } }
+    Stmt outerDecl = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "outer"), new Expr.Literal("A"));
+    Stmt innerBlock = new Stmt.Block(List.of(
+        new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "inner"), new Expr.Literal("B")),
+        new Stmt.Block(List.of(
+            new Stmt.Print(new Expr.Binary(
+                new Expr.Variable(token(TokenType.IDENTIFIER, "outer")),
+                token(TokenType.PLUS, "+"),
+                new Expr.Variable(token(TokenType.IDENTIFIER, "inner"))
+            ))
+        ))
+    ));
+
+    // when
+    executor.execute(List.of(outerDecl, innerBlock));
+
+    // then
+    assertEquals("AB", output());
+  }
+
+  @Test
   @DisplayName("숫자가 아닌 값에 산술 연산을 하면 RuntimeError 가 발생한다")
   void arithmeticOnNonNumberThrowsRuntimeError() {
     // given

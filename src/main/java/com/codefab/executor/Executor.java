@@ -123,6 +123,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Object visitBinary(Expr.Binary expr) {
     Object leftVal = evaluate(expr.left);
     Object rightVal = evaluate(expr.right);
+    if (expr.operator.type == TokenType.PLUS) {
+      if (leftVal instanceof String && rightVal instanceof String) {
+        return (String) leftVal + (String) rightVal;
+      }
+    }
     checkNumberOperands(leftVal, rightVal);
     double left = (double) leftVal;
     double right = (double) rightVal;
