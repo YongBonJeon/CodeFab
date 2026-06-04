@@ -82,7 +82,10 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         return null;
     }
-    @Override public Void visitLiteral(Expr.Literal expr)       { return null; }
+    @Override
+    public Void visitLiteral(Expr.Literal expr) {
+        return null;
+    }
     @Override
     public Void visitVariable(Expr.Variable expr) {
         if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
