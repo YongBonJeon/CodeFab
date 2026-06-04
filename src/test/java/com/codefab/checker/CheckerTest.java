@@ -286,4 +286,24 @@ class CheckerTest {
                 new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Literal(2)));
         assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(grouping))));
     }
+
+    @Test
+    @DisplayName("[visitBinary] FAIL - 이항 연산자의 피연산자에 자기참조 변수가 있으면 SemanticError 전파")
+    void visitBinary_FAIL_피연산자에_자기참조() {
+        // Arrange  { var a = a + 1; }
+        Expr bin  = new Expr.Binary(new Expr.Variable(id("a")), op(TokenType.PLUS, "+"), new Expr.Literal(1));
+        Stmt decl = new Stmt.VarDeclare(id("a"), bin);
+        Stmt block = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitBinary] PASS - 리터럴만으로 구성된 이항 연산은 정상")
+    void visitBinary_PASS_리터럴_간_연산() {
+        // Arrange  1 + 2;
+        Expr bin = new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Literal(2));
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(bin))));
+    }
 }
