@@ -16,7 +16,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 
     public Checker() {
-        beginScope();  // 전역 스코프 - 인스턴스 생명주기 동안 유지
+        beginScope();
     }
 
     public void check(List<Stmt> statements) {
