@@ -127,34 +127,38 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
     double left = (double) leftVal;
     double right = (double) rightVal;
-    switch (expr.operator.origin) {
-      case "+": return left + right;
-      case "-": return left - right;
-      case "*": return left * right;
-      case "/":
+    return switch (expr.operator.origin) {
+      case "+" -> left + right;
+      case "-" -> left - right;
+      case "*" -> left * right;
+      case "/" -> {
         if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
-        return left / right;
-      case ">": return left > right;
-      case "<": return left < right;
-    }
-    throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.origin);
+        yield left / right;
+      }
+      case ">" -> left > right;
+      case "<" -> left < right;
+      default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.origin);
+    };
   }
 
   @Override
   public Object visitUnary(Expr.Unary expr) {
     Object right = evaluate(expr.right);
-    if (expr.operator.origin.equals("-")) return -(double) right;
-    if (expr.operator.origin.equals("!")) return !isTruthy(right);
-    throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.origin);
+    return switch (expr.operator.origin) {
+      case "-" -> -(double) right;
+      case "!" -> !isTruthy(right);
+      default -> throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.origin);
+    };
   }
 
   @Override
   public Object visitLogical(Expr.Logical expr) {
     Object left = evaluate(expr.left);
-    if (expr.operator.origin.equals("and")) {
-      return isTruthy(left) ? evaluate(expr.right) : left;
-    }
-    return isTruthy(left) ? left : evaluate(expr.right);
+    return switch (expr.operator.origin) {
+      case "and" -> isTruthy(left) ? evaluate(expr.right) : left;
+      case "or" -> isTruthy(left) ? left : evaluate(expr.right);
+      default -> throw new UnsupportedOperationException("지원하지 않는 논리 연산자: " + expr.operator.origin);
+    };
   }
 
   @Override
