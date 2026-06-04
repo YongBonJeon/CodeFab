@@ -43,7 +43,4 @@ public class Environment {
     throw new ExecutionError(name.line, "미정의된 변수 '" + name.origin + "'");
   }
 
-  public Environment getEnclosing() {
-    return enclosing;
-  }
 }

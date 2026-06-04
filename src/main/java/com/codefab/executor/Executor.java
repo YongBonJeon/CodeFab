@@ -13,10 +13,6 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private Environment environment = globals;
   private final PrintStream out;
 
-  public Executor() {
-    this.out = System.out;
-  }
-
   public Executor(PrintStream out) {
     this.out = out;
   }
@@ -125,8 +121,8 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object leftVal = evaluate(expr.left);
     Object rightVal = evaluate(expr.right);
     if (expr.operator.type == TokenType.PLUS) {
-      if (leftVal instanceof String && rightVal instanceof String) {
-        return (String) leftVal + (String) rightVal;
+      if (leftVal instanceof String l && rightVal instanceof String r) {
+        return l + r;
       }
     }
     checkNumberOperands(leftVal, rightVal, expr.operator);
