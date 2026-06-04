@@ -223,4 +223,67 @@ class CheckerTest {
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(forStmt)));
     }
+
+    // ── Cycle 5: visitUnary/Logical/Grouping 전파 ────────────────────────
+
+    @Test
+    @DisplayName("[visitUnary] FAIL - 단항 연산자의 피연산자에 자기참조 변수가 있으면 SemanticError 전파")
+    void visitUnary_FAIL_피연산자에_자기참조() {
+        // Arrange  { var a = -a; }
+        Expr unary = new Expr.Unary(op(TokenType.MINUS, "-"), new Expr.Variable(id("a")));
+        Stmt decl  = new Stmt.VarDeclare(id("a"), unary);
+        Stmt block = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitUnary] PASS - 리터럴에 단항 연산자를 적용하는 경우 정상")
+    void visitUnary_PASS_리터럴에_단항_연산() {
+        // Arrange  -1;
+        Expr unary = new Expr.Unary(op(TokenType.MINUS, "-"), new Expr.Literal(1));
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(unary))));
+    }
+
+    @Test
+    @DisplayName("[visitLogical] FAIL - 논리 연산자의 피연산자에 자기참조 변수가 있으면 SemanticError 전파")
+    void visitLogical_FAIL_피연산자에_자기참조() {
+        // Arrange  { var a = a && true; }
+        Expr logical = new Expr.Logical(new Expr.Variable(id("a")), op(TokenType.AND, "&&"), new Expr.Literal(true));
+        Stmt decl    = new Stmt.VarDeclare(id("a"), logical);
+        Stmt block   = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitLogical] PASS - 리터럴만으로 구성된 논리 연산은 정상")
+    void visitLogical_PASS_리터럴_간_논리_연산() {
+        // Arrange  true && false;
+        Expr logical = new Expr.Logical(new Expr.Literal(true), op(TokenType.AND, "&&"), new Expr.Literal(false));
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(logical))));
+    }
+
+    @Test
+    @DisplayName("[visitGrouping] FAIL - 괄호 안의 표현식에 자기참조 변수가 있으면 SemanticError 전파")
+    void visitGrouping_FAIL_괄호_안에_자기참조() {
+        // Arrange  { var a = (a); }
+        Expr grouping = new Expr.Grouping(new Expr.Variable(id("a")));
+        Stmt decl     = new Stmt.VarDeclare(id("a"), grouping);
+        Stmt block    = new Stmt.Block(List.of(decl));
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitGrouping] PASS - 괄호 안에 리터럴 연산만 있는 경우 정상")
+    void visitGrouping_PASS_괄호_안에_리터럴() {
+        // Arrange  (1 + 2);
+        Expr grouping = new Expr.Grouping(
+                new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Literal(2)));
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(grouping))));
+    }
 }
