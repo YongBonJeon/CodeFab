@@ -1,0 +1,41 @@
+// --- 선언 & 사용 ---
+var a = 10;
+var b = 20;
+print a + b;            // expect: 30
+
+
+// --- 재할당 ---
+a = a + 5;
+print a;                // expect: 15
+
+// --- 블록 스코프 & 변수 shawdowing ---
+// 해당 기능은 Prompt 모드에서 테스트보다는 File 입력모드에서 진행 권장드립니다. (멀티라인입력 문제 해결시 가능)
+// 이후에 File 입력모드가 추가되는데 해당 모드에서 테스트해주세요.
+var x = "global";
+{
+  var x = "inner";
+  print x;              // expect: inner
+}
+print x;                // expect: global  (블록 밖은 영향 없음)
+
+
+// --- 안쪽 블록에서 바깥 변수 수정은 가능 ---
+// 해당 기능은 Prompt 모드에서 테스트보다는 File 입력모드에서 진행 권장드립니다. (멀티라인입력 문제 해결시 가능)
+// 이후에 File 입력모드가 추가되는데 해당 모드에서 테스트해주세요.
+var count = 0;
+{
+  count = count + 1;    // 같은 이름 재선언이 아니라 바깥 변수 수정
+}
+print count;            // expect: 1
+
+
+// 중첩 스코프 해석
+// 해당 기능은 Prompt 모드에서 테스트보다는 File 입력모드에서 진행 권장드립니다. (멀티라인입력 문제 해결시 가능)
+// 이후에 File 입력모드가 추가되는데 해당 모드에서 테스트해주세요.
+var outer = "A";
+{
+  var inner = "B";
+  {
+    print outer + inner;  // expect: AB
+  }
+}

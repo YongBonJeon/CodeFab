@@ -49,4 +49,5 @@ application {
 
 tasks.named<JavaExec>("run") {
     standardInput = System.`in`
+    args = (project.findProperty("args") as String?)?.split(" ") ?: emptyList()
 }

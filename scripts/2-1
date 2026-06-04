@@ -1,0 +1,14 @@
+// 세미콜론 누락
+// 기대: "Expect ';' after value." 류의 메시지
+print 1 + 2
+// 닫는 괄호 누락
+// 기대: "Expect ')' after expression." 류의 메시지
+print (1 + 2;
+// 잘못된 할당 대상
+// 기대: "Invalid assignment target." 류의 메시지
+var a = 1;
+var b = 2;
+a + b = 3;
+// 표현식이 와야 할 자리에 엉뚱한 토큰
+// 기대: "Expect expression." 류의 메시지
+print * 5;

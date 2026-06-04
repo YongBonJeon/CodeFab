@@ -1,0 +1,9 @@
+// 정의되지 않은 변수 참조
+// 기대: "Undefined variable 'notDefined'." (+ 줄 번호) 류의 메시지
+print notDefined;
+// + 연산자에 숫자/문자열 혼용
+// 기대: "Operands must be two numbers or two strings." 류의 메시지
+print 1 + "HI";
+// 숫자가 아닌 값에 단항 마이너스
+// 기대: "Operand must be a number." 류의 메시지
+print -"FabCoding";

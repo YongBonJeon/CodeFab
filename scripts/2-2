@@ -1,0 +1,6 @@
+// 지역 변수를 자기 초기화식에서 읽기 (선언전 사용 오류)
+// 기대: "Can't read local variable in initializer." 류의 메시지
+{ var a = a;}
+// 같은 로컬 스코프 중복 선언 오류
+// 기대: "Already a variable with this name in this scope." 류의 메시지
+{ var a = "hi"; var a = 3; }
