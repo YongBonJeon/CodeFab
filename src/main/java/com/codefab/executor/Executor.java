@@ -122,9 +122,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Object visitBinary(Expr.Binary expr) {
     Object leftVal = evaluate(expr.left);
     Object rightVal = evaluate(expr.right);
-    if (!(leftVal instanceof Double) || !(rightVal instanceof Double)) {
-      throw new RuntimeError("피연산자는 숫자여야 합니다");
-    }
+    checkNumberOperands(leftVal, rightVal);
     double left = (double) leftVal;
     double right = (double) rightVal;
     return switch (expr.operator.origin) {
@@ -145,7 +143,10 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Object visitUnary(Expr.Unary expr) {
     Object right = evaluate(expr.right);
     return switch (expr.operator.origin) {
-      case "-" -> -(double) right;
+      case "-" -> {
+        checkNumberOperand(right);
+        yield -(double) right;
+      }
       case "!" -> !isTruthy(right);
       default -> throw new UnsupportedOperationException("지원하지 않는 단항 연산자: " + expr.operator.origin);
     };
@@ -167,6 +168,18 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
+
+  private void checkNumberOperand(Object operand) {
+    if (!(operand instanceof Double)) {
+      throw new RuntimeError("피연산자는 숫자여야 합니다");
+    }
+  }
+
+  private void checkNumberOperands(Object left, Object right) {
+    if (!(left instanceof Double) || !(right instanceof Double)) {
+      throw new RuntimeError("피연산자는 숫자여야 합니다");
+    }
+  }
 
   private boolean isTruthy(Object value) {
     if (value == null) return false;
