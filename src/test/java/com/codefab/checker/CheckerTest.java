@@ -306,4 +306,41 @@ class CheckerTest {
         Expr bin = new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Literal(2));
         assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(bin))));
     }
+
+    // ── Cycle 6: visitExpression/Print/Assign 전파 ───────────────────────
+
+    @Test
+    @DisplayName("[visitExpression] PASS - 리터럴 연산으로만 이루어진 일반 식문은 정상")
+    void visitExpression_PASS_일반_식문() {
+        // Arrange  1 + 2;
+        Expr expr = new Expr.Binary(new Expr.Literal(1), op(TokenType.PLUS, "+"), new Expr.Literal(2));
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(expr))));
+    }
+
+    @Test
+    @DisplayName("[visitPrint] PASS - 리터럴을 출력하는 print 문은 정상")
+    void visitPrint_PASS_리터럴_출력() {
+        // Arrange  print 42;
+        assertDoesNotThrow(() -> check(List.of(new Stmt.Print(new Expr.Literal(42)))));
+    }
+
+    @Test
+    @DisplayName("[visitPrint] PASS - 선언 완료된 변수를 print 문에서 사용하는 경우 정상")
+    void visitPrint_PASS_선언된_변수_출력() {
+        // Arrange  { var a = 1; print a; }
+        Stmt decl  = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt print = new Stmt.Print(new Expr.Variable(id("a")));
+        Stmt block = new Stmt.Block(List.of(decl, print));
+        assertDoesNotThrow(() -> check(List.of(block)));
+    }
+
+    @Test
+    @DisplayName("[visitAssign] PASS - 선언 완료 후 다른 값을 재대입하는 경우 정상")
+    void visitAssign_PASS_선언_후_재대입() {
+        // Arrange  { var a = 1; a = 2; }
+        Stmt decl   = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt assign = new Stmt.Expression(new Expr.Assign(id("a"), new Expr.Literal(2)));
+        Stmt block  = new Stmt.Block(List.of(decl, assign));
+        assertDoesNotThrow(() -> check(List.of(block)));
+    }
 }
