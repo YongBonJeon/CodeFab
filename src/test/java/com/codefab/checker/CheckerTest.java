@@ -130,4 +130,42 @@ class CheckerTest {
         // Act & Assert
         assertDoesNotThrow(() -> check(List.of(decl)));
     }
+
+    // ── Cycle 3: visitIf ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[visitIf] FAIL - then 블록 내에서 동일 이름 변수를 재선언하면 SemanticError")
+    void visitIf_FAIL_then_블록에서_변수_재선언() {
+        // Arrange  if (true) { var a = 1; var a = 2; }
+        Stmt decl1     = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2     = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
+        Stmt thenBlock = new Stmt.Block(List.of(decl1, decl2));
+        Stmt ifStmt    = new Stmt.If(new Expr.Literal(true), thenBlock, null);
+
+        // Act & Assert
+        assertThrows(SemanticError.class, () -> check(List.of(ifStmt)));
+    }
+
+    @Test
+    @DisplayName("[visitIf] PASS - then과 else는 별개의 스코프이므로 같은 이름 변수 선언 허용")
+    void visitIf_PASS_then과_else에서_같은_이름_선언() {
+        // Arrange  if (true) { var a = 1; } else { var a = 2; }
+        Stmt thenBlock = new Stmt.Block(List.of(new Stmt.VarDeclare(id("a"), new Expr.Literal(1))));
+        Stmt elseBlock = new Stmt.Block(List.of(new Stmt.VarDeclare(id("a"), new Expr.Literal(2))));
+        Stmt ifStmt    = new Stmt.If(new Expr.Literal(true), thenBlock, elseBlock);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(ifStmt)));
+    }
+
+    @Test
+    @DisplayName("[visitIf] PASS - else 브랜치가 없는 if 문은 정상")
+    void visitIf_PASS_else_없는_if() {
+        // Arrange  if (true) print 1;
+        Stmt ifStmt = new Stmt.If(new Expr.Literal(true),
+                new Stmt.Print(new Expr.Literal(1)), null);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(ifStmt)));
+    }
 }
