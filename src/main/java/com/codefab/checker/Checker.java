@@ -34,6 +34,11 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         scope.put(name.origin, Boolean.FALSE);
     }
 
+    private void define(Token name) {
+        if (scopes.isEmpty()) return;
+        scopes.peek().put(name.origin, Boolean.TRUE);
+    }
+
     @Override
     public Void visitBlock(Stmt.Block stmt) {
         beginScope();
@@ -46,7 +51,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitVarDeclare(Stmt.VarDeclare stmt) {
         declare(stmt.name);
         if (stmt.initializer != null) resolve(stmt.initializer);
-        if (!scopes.isEmpty()) scopes.peek().put(stmt.name.origin, Boolean.TRUE);
+        define(stmt.name);
         return null;
     }
     @Override public Void visitExpression(Stmt.Expression stmt) { return null; }
