@@ -26,6 +26,7 @@ public class PromptShell {
     System.out.println("(종료: Ctrl+D 또는 'exit')");
     while (true) {
       System.out.print(">>> ");
+      System.out.flush();
       String line = reader.readLine();
       if (line == null) {
         break;

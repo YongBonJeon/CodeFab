@@ -13,6 +13,7 @@ import java.util.List;
 
 public class CodeFab {
 
+  private final Checker checker;
   private final Executor executor;
   private final PrintStream err;
 
@@ -21,6 +22,7 @@ public class CodeFab {
   }
 
   public CodeFab(PrintStream out, PrintStream err) {
+    this.checker = new Checker();
     this.executor = new Executor(out);
     this.err = err;
   }
@@ -29,7 +31,7 @@ public class CodeFab {
     try {
       List<Token> tokens = new Tokenizer(source).tokenize();
       List<Stmt> stmts = new Parser(tokens).parse();
-      new Checker().check(stmts);
+      checker.check(stmts);
       executor.execute(stmts);
       return true;
     } catch (CodeFabError e) {

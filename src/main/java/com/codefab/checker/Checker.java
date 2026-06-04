@@ -15,6 +15,10 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 
+    public Checker() {
+        beginScope();
+    }
+
     public void check(List<Stmt> statements) {
         for (Stmt s : statements) resolve(s);
     }
@@ -36,7 +40,6 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void declare(Token name) {
-        if (scopes.isEmpty()) return;
         Map<String, Boolean> scope = scopes.peek();
         if (scope.containsKey(name.origin)) {
             throw new SemanticError(name.line,
@@ -46,7 +49,6 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void define(Token name) {
-        if (scopes.isEmpty()) return;
         scopes.peek().put(name.origin, Boolean.TRUE);
     }
 
@@ -104,7 +106,7 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVariable(Expr.Variable expr) {
-        if (!scopes.isEmpty() && Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
+        if (Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
             throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
         }
         return null;

@@ -122,13 +122,67 @@ class CheckerTest {
     }
 
     @Test
-    @DisplayName("[visitVariable] PASS - 전역 스코프에서 변수 참조는 검사하지 않으므로 정상")
-    void visitVariable_PASS_전역_변수_참조() {
+    @DisplayName("[visitVariable] FAIL - 전역 스코프에서도 초기화식 자기참조는 SemanticError")
+    void visitVariable_FAIL_전역_스코프에서_자기참조() {
         // Arrange  var a = a;  (블록 없음 = 전역)
         Stmt decl = new Stmt.VarDeclare(id("a"), new Expr.Variable(id("a")));
 
         // Act & Assert
-        assertDoesNotThrow(() -> check(List.of(decl)));
+        assertThrows(SemanticError.class, () -> check(List.of(decl)));
+    }
+
+    @Test
+    @DisplayName("[전역] FAIL - 전역 스코프에서 동일 이름 변수를 두 번 선언하면 SemanticError")
+    void 전역_스코프에서_변수_재선언_에러() {
+        // Arrange  var a = 1; var a = 2;  (블록 없음 = 전역)
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
+
+        // Act & Assert
+        SemanticError ex = assertThrows(SemanticError.class,
+                () -> check(List.of(decl1, decl2)));
+        assertTrue(ex.getMessage().contains("a"));
+        assertTrue(ex.getMessage().contains("스코프"));
+    }
+
+    @Test
+    @DisplayName("[전역] PASS - 전역 스코프에서 서로 다른 이름의 변수 선언은 정상")
+    void 전역_스코프에서_다른_이름_선언_정상() {
+        // Arrange  var a = 1; var b = 2;
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("b"), new Expr.Literal(2));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> check(List.of(decl1, decl2)));
+    }
+
+    @Test
+    @DisplayName("[전역] FAIL - REPL에서 동일 Checker 재사용 시 전역 변수 재선언은 SemanticError")
+    void REPL_동일_Checker_재사용시_전역_재선언_에러() {
+        // Arrange  REPL 환경 시뮬레이션: 같은 Checker 인스턴스로 두 번 check() 호출
+        Checker checker = new Checker();
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
+
+        // Act & Assert
+        checker.check(List.of(decl1));  // 첫 번째 입력: var a = 1;
+        assertThrows(SemanticError.class,
+                () -> checker.check(List.of(decl2)));  // 두 번째 입력: var a = 2;
+    }
+
+    @Test
+    @DisplayName("[전역] PASS - REPL에서 동일 Checker 재사용 시 다른 이름 변수는 정상")
+    void REPL_동일_Checker_재사용시_다른_이름_선언_정상() {
+        // Arrange
+        Checker checker = new Checker();
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("b"), new Expr.Literal(2));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> {
+            checker.check(List.of(decl1));  // var a = 1;
+            checker.check(List.of(decl2));  // var b = 2;
+        });
     }
 
     // ── Cycle 3: visitIf ─────────────────────────────────────────────────
