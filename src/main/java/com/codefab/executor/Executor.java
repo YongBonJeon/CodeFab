@@ -33,6 +33,18 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return expr.accept(this);
   }
 
+  void executeBlock(List<Stmt> statements, Environment newEnvironment) {
+    Environment previous = this.environment;
+    this.environment = newEnvironment;
+    try {
+      for (Stmt stmt : statements) {
+        execute(stmt);
+      }
+    } finally {
+      this.environment = previous;
+    }
+  }
+
   // ── Stmt Visitors ────────────────────────────────────────────────────────
 
   @Override
@@ -57,15 +69,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitBlock(Stmt.Block stmt) {
-    Environment previous = this.environment;
-    this.environment = new Environment(previous);
-    try {
-      for (Stmt s : stmt.statements) {
-        execute(s);
-      }
-    } finally {
-      this.environment = previous;
-    }
+    executeBlock(stmt.statements, new Environment(environment));
     return null;
   }
 
