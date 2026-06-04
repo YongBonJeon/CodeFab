@@ -2,7 +2,8 @@ package com.codefab.executor;
 
 import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
-import com.codefab.error.RuntimeError;
+import com.codefab.error.ExecutionError;
+import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.PrintStream;
 import java.util.List;
@@ -109,13 +110,13 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitVariable(Expr.Variable expr) {
-    return environment.get(expr.name.origin);
+    return environment.get(expr.name);
   }
 
   @Override
   public Object visitAssign(Expr.Assign expr) {
     Object value = evaluate(expr.value);
-    environment.assign(expr.name.origin, value);
+    environment.assign(expr.name, value);
     return value;
   }
 
@@ -128,7 +129,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return (String) leftVal + (String) rightVal;
       }
     }
-    checkNumberOperands(leftVal, rightVal);
+    checkNumberOperands(leftVal, rightVal, expr.operator);
     double left = (double) leftVal;
     double right = (double) rightVal;
     return switch (expr.operator.type) {
@@ -136,7 +137,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       case MINUS -> left - right;
       case STAR -> left * right;
       case SLASH -> {
-        if (right == 0) throw new RuntimeError("0으로 나눌 수 없습니다");
+        if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
         yield left / right;
       }
       case GREATER -> left > right;
@@ -150,7 +151,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object right = evaluate(expr.right);
     return switch (expr.operator.type) {
       case MINUS -> {
-        checkNumberOperand(right);
+        checkNumberOperand(right, expr.operator);
         yield -(double) right;
       }
       case BANG -> !isTruthy(right);
@@ -175,15 +176,15 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  private void checkNumberOperand(Object operand) {
+  private void checkNumberOperand(Object operand, Token operator) {
     if (!(operand instanceof Double)) {
-      throw new RuntimeError("피연산자는 숫자여야 합니다");
+      throw new ExecutionError(operator.line, "피연산자는 숫자여야 합니다");
     }
   }
 
-  private void checkNumberOperands(Object left, Object right) {
+  private void checkNumberOperands(Object left, Object right, Token operator) {
     if (!(left instanceof Double) || !(right instanceof Double)) {
-      throw new RuntimeError("피연산자는 숫자여야 합니다");
+      throw new ExecutionError(operator.line, "피연산자는 숫자여야 합니다");
     }
   }
 

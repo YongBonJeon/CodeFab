@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
-import com.codefab.error.RuntimeError;
+import com.codefab.error.ExecutionError;
 import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.ByteArrayOutputStream;
@@ -267,7 +267,7 @@ class ExecutorTest {
 
     // when & then
     executor.execute(List.of(block));
-    assertThrows(RuntimeError.class, () -> executor.execute(List.of(
+    assertThrows(ExecutionError.class, () -> executor.execute(List.of(
         new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "a")))
     )));
   }
@@ -511,36 +511,36 @@ class ExecutorTest {
   }
 
   @Test
-  @DisplayName("숫자가 아닌 값에 산술 연산을 하면 RuntimeError 가 발생한다")
-  void arithmeticOnNonNumberThrowsRuntimeError() {
+  @DisplayName("숫자가 아닌 값에 산술 연산을 하면 ExecutionError 가 발생한다")
+  void arithmeticOnNonNumberThrowsExecutionError() {
     // given
     Stmt stmt = new Stmt.Print(
         new Expr.Binary(new Expr.Literal("hello"), token(TokenType.MINUS, "-"), new Expr.Literal(1.0))
     );
 
     // when & then
-    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+    assertThrows(ExecutionError.class, () -> executor.execute(List.of(stmt)));
   }
 
   @Test
-  @DisplayName("0 으로 나누면 RuntimeError 가 발생한다")
-  void divisionByZeroThrowsRuntimeError() {
+  @DisplayName("0 으로 나누면 ExecutionError 가 발생한다")
+  void divisionByZeroThrowsExecutionError() {
     // given
     Stmt stmt = new Stmt.Print(
         new Expr.Binary(new Expr.Literal(10.0), token(TokenType.SLASH, "/"), new Expr.Literal(0.0))
     );
 
     // when & then
-    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+    assertThrows(ExecutionError.class, () -> executor.execute(List.of(stmt)));
   }
 
   @Test
-  @DisplayName("선언하지 않은 변수를 참조하면 RuntimeError 가 발생한다")
-  void undefinedVariableThrowsRuntimeError() {
+  @DisplayName("선언하지 않은 변수를 참조하면 ExecutionError 가 발생한다")
+  void undefinedVariableThrowsExecutionError() {
     // given
     Stmt stmt = new Stmt.Print(new Expr.Variable(token(TokenType.IDENTIFIER, "x")));
 
     // when & then
-    assertThrows(RuntimeError.class, () -> executor.execute(List.of(stmt)));
+    assertThrows(ExecutionError.class, () -> executor.execute(List.of(stmt)));
   }
 }

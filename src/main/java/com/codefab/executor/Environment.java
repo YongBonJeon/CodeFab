@@ -1,6 +1,7 @@
 package com.codefab.executor;
 
-import com.codefab.error.RuntimeError;
+import com.codefab.error.ExecutionError;
+import com.codefab.token.Token;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,26 +21,26 @@ public class Environment {
     values.put(name, value);
   }
 
-  public Object get(String name) {
-    if (values.containsKey(name)) {
-      return values.get(name);
+  public Object get(Token name) {
+    if (values.containsKey(name.origin)) {
+      return values.get(name.origin);
     }
     if (enclosing != null) {
       return enclosing.get(name);
     }
-    throw new RuntimeError("미정의된 변수 '" + name + "'");
+    throw new ExecutionError(name.line, "미정의된 변수 '" + name.origin + "'");
   }
 
-  public void assign(String name, Object value) {
-    if (values.containsKey(name)) {
-      values.put(name, value);
+  public void assign(Token name, Object value) {
+    if (values.containsKey(name.origin)) {
+      values.put(name.origin, value);
       return;
     }
     if (enclosing != null) {
       enclosing.assign(name, value);
       return;
     }
-    throw new RuntimeError("미정의된 변수 '" + name + "'");
+    throw new ExecutionError(name.line, "미정의된 변수 '" + name.origin + "'");
   }
 
   public Environment getEnclosing() {
