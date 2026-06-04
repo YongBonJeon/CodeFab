@@ -67,8 +67,8 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitFor(Stmt.For stmt) {
         beginScope();
         if (stmt.initializer != null) resolve(stmt.initializer);
-        if (stmt.condition   != null) resolve(stmt.condition);
-        if (stmt.increment   != null) resolve(stmt.increment);
+        if (stmt.condition != null) resolve(stmt.condition);
+        if (stmt.increment != null) resolve(stmt.increment);
         resolve(stmt.body);
         endScope();
         return null;
