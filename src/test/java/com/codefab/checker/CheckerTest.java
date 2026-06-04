@@ -156,6 +156,35 @@ class CheckerTest {
         assertDoesNotThrow(() -> check(List.of(decl1, decl2)));
     }
 
+    @Test
+    @DisplayName("[전역] FAIL - REPL에서 동일 Checker 재사용 시 전역 변수 재선언은 SemanticError")
+    void REPL_동일_Checker_재사용시_전역_재선언_에러() {
+        // Arrange  REPL 환경 시뮬레이션: 같은 Checker 인스턴스로 두 번 check() 호출
+        Checker checker = new Checker();
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("a"), new Expr.Literal(2));
+
+        // Act & Assert
+        checker.check(List.of(decl1));  // 첫 번째 입력: var a = 1;
+        assertThrows(SemanticError.class,
+                () -> checker.check(List.of(decl2)));  // 두 번째 입력: var a = 2;
+    }
+
+    @Test
+    @DisplayName("[전역] PASS - REPL에서 동일 Checker 재사용 시 다른 이름 변수는 정상")
+    void REPL_동일_Checker_재사용시_다른_이름_선언_정상() {
+        // Arrange
+        Checker checker = new Checker();
+        Stmt decl1 = new Stmt.VarDeclare(id("a"), new Expr.Literal(1));
+        Stmt decl2 = new Stmt.VarDeclare(id("b"), new Expr.Literal(2));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> {
+            checker.check(List.of(decl1));  // var a = 1;
+            checker.check(List.of(decl2));  // var b = 2;
+        });
+    }
+
     // ── Cycle 3: visitIf ─────────────────────────────────────────────────
 
     @Test
