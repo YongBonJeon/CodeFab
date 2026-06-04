@@ -21,7 +21,11 @@ public final class Token {
 
     @Override
     public String toString() {
-        return "Token(" + type + ", \"" + origin + "\")";
+        StringBuilder sb = new StringBuilder("Token(").append(type)
+                .append(", \"").append(origin).append("\"");
+        if (literal != null) sb.append(", value=").append(literal);
+        return sb.append(")").toString();
+
     }
 
     @Override
