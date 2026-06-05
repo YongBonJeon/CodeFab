@@ -53,4 +53,21 @@ class FactoryShellTest {
         assertEquals(0, exitCode);
         assertEquals("42", output());
     }
+
+    // ── Cycle 5: <file> 단축형 ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("[dispatch] PASS - 파일 경로만 인자로 주면 run의 단축형으로 실행된다")
+    void dispatch_PASS_파일경로만_주면_단축형으로_실행된다(@TempDir Path tempDir) throws Exception {
+        // Arrange
+        Path file = tempDir.resolve("test.cfab");
+        Files.writeString(file, "print 99;");
+
+        // Act
+        int exitCode = shell.dispatch(new String[]{file.toString()});
+
+        // Assert
+        assertEquals(0, exitCode);
+        assertEquals("99", output());
+    }
 }
