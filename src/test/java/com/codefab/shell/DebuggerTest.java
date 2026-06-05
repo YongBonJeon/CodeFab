@@ -138,4 +138,18 @@ class DebuggerTest {
         assertTrue(output.contains("[WATCH] 'x' 감시 해제"));
         assertFalse(output.contains("[WATCH] x = 1"));
     }
+
+    // ── Cycle 16: watches 목록 ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - watches 명령은 감시 중인 변수 목록과 값을 출력한다")
+    void debugger_PASS_watches_명령은_감시_목록과_값을_출력한다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → watch x, watch y → step → 2번 줄 정지 → step → 3번 줄 정지 → watches 조회
+        String commands = "watch x\nwatch y\nstep\nstep\nwatches\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("[WATCH] x = 1"));
+        assertTrue(output.contains("[WATCH] y = 2"));
+    }
 }
