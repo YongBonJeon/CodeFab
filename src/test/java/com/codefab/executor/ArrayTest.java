@@ -12,7 +12,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import com.codefab.error.ExecutionError;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArrayTest {
 
@@ -109,5 +113,26 @@ class ArrayTest {
 
         // Assert
         assertEquals("7", output());
+    }
+
+    // ── Cycle 4: 범위를 벗어난 인덱스 ────────────────────────────────────
+
+    @Test
+    @DisplayName("[visitIndex] FAIL - 범위를 벗어난 인덱스 접근은 ExecutionError")
+    void visitIndex_FAIL_범위를_벗어난_인덱스는_에러() {
+        // Arrange
+        Token arrToken = token(TokenType.IDENTIFIER, "arr");
+        Token bracket = token(TokenType.LEFT_BRACKET, "[");
+
+        Stmt arrDecl = new Stmt.VarDeclare(arrToken, new Expr.Literal(new CodeFabArray(3)));
+        Stmt print = new Stmt.Print(new Expr.Index(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Literal(5.0)));
+
+        // Act & Assert
+        ExecutionError error = assertThrows(ExecutionError.class,
+                () -> executor.execute(List.of(arrDecl, print)));
+        assertTrue(error.getMessage().contains("범위"));
     }
 }
