@@ -47,4 +47,18 @@ class DebuggerTest {
         assertTrue(output.contains("[DEBUG] 3번째 줄에서 정지"));
         assertTrue(output.contains("(breakpoint)"));
     }
+
+    // ── Cycle 10: watch ───────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - watch 명령으로 변수를 감시하면 각 정지 시 값이 출력된다")
+    void debugger_PASS_watch_명령으로_변수를_감시하면_값이_출력된다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → watch x 등록 → step → 2번 줄 정지(WATCH x = 1 출력) → step → step
+        String commands = "watch x\nstep\nstep\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("[WATCH] 'x' 감시 등록"));
+        assertTrue(output.contains("[WATCH] x = 1"));
+    }
 }
