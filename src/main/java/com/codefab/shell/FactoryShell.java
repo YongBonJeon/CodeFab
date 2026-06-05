@@ -14,9 +14,10 @@ public class FactoryShell {
   }
 
   public int dispatch(String[] args) throws IOException {
+    FileRunner fileRunner = new FileRunner(out, err);
     if (args[0].equals("run")) {
-      return new FileRunner(out, err).run(args[1]);
+      return fileRunner.run(args[1]);
     }
-    return new FileRunner(out, err).run(args[0]);
+    return fileRunner.run(args[0]);
   }
 }
