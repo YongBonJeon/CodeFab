@@ -59,13 +59,13 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void resolveLocal(Expr expr, String name) {
-        int i = 0;
+        int distance = 0;
         for (Map<String, Boolean> scope : scopes) {
             if (scope.containsKey(name)) {
-                locals.put(expr, i);
+                locals.put(expr, distance);
                 return;
             }
-            i++;
+            distance++;
         }
     }
 

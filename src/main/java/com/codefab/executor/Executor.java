@@ -10,18 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-  private Environment globals = new Environment();
-  private Environment environment = globals;
+  private final Environment globals;
+  private Environment environment;
   private final PrintStream out;
   private Map<Expr, Integer> locals = new java.util.HashMap<>();
 
   public Executor(PrintStream out) {
     this.out = out;
-  }
-
-  Executor(PrintStream out, Environment globals) {
-    this.out = out;
-    this.globals = globals;
+    this.globals = new Environment();
     this.environment = globals;
   }
 
