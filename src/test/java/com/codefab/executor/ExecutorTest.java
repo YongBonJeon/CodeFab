@@ -547,23 +547,6 @@ class ExecutorTest {
 
   // ── 정적 바인딩 테스트 ────────────────────────────────────────────────────
 
-  static class TrackingEnvironment extends Environment {
-    int getAtCallCount = 0;
-    int getDynamicCallCount = 0;
-
-    @Override
-    public Object getAt(int distance, String name) {
-      getAtCallCount++;
-      return super.getAt(distance, name);
-    }
-
-    @Override
-    public Object get(com.codefab.token.Token name) {
-      getDynamicCallCount++;
-      return super.get(name);
-    }
-  }
-
   @Test
   @DisplayName("정적 바인딩 적용 시 locals 맵에 변수 참조 distance 가 기록된다")
   void staticBinding_localsMapContainsDistanceForVariableRef() {
