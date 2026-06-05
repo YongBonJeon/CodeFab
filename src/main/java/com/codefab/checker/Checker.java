@@ -15,6 +15,8 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
 
+    private boolean inFunction = false;
+
     public Checker() {
         beginScope();
     }
@@ -65,6 +67,38 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name);
         if (stmt.initializer != null) resolve(stmt.initializer);
         define(stmt.name);
+        return null;
+    }
+
+    @Override
+    public Void visitFunction(Stmt.Function stmt) {
+        // Declare the function name in the current scope first so recursion resolves.
+        declare(stmt.name);
+        define(stmt.name);
+
+        boolean enclosingInFunction = inFunction;
+        inFunction = true;
+        beginScope();
+        for (Token param : stmt.params) {
+            if (scopes.peek().containsKey(param.origin)) {
+                throw new SemanticError(param.line,
+                        "'" + param.origin + "' 에러: 파라미터 이름이 중복되었습니다.");
+            }
+            declare(param);
+            define(param);
+        }
+        for (Stmt s : stmt.body) resolve(s);
+        endScope();
+        inFunction = enclosingInFunction;
+        return null;
+    }
+
+    @Override
+    public Void visitReturn(Stmt.Return stmt) {
+        if (!inFunction) {
+            throw new SemanticError(stmt.keyword.line, "함수 외부에서는 return 을 사용할 수 없습니다.");
+        }
+        if (stmt.value != null) resolve(stmt.value);
         return null;
     }
 
@@ -141,6 +175,13 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitGrouping(Expr.Grouping expr) {
         resolve(expr.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitCall(Expr.Call expr) {
+        resolve(expr.callee);
+        for (Expr argument : expr.arguments) resolve(argument);
         return null;
     }
 }

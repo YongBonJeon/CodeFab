@@ -1,0 +1,11 @@
+Func add(a, b) {
+return a + b;
+}
+var ret = add(3, 7);
+print ret;
+
+Func fact(n) {
+if(n <= 1) return 1;
+return n * fact(n - 1);
+}
+print fact(10);
