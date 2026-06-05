@@ -41,7 +41,7 @@ class ArrayTest {
 
 
     @Test
-    @DisplayName("[visitIndex] PASS - null로 초기화된 배열 원소를 읽으면 null이 출력된다")
+    @DisplayName("[visitIndex] PASS - null로 초기화된 배열 원소를 읽으면 nil이 출력된다")
     void visitIndex_PASS_null로_초기화된_원소를_읽는다() {
         // Arrange
         Stmt arrDecl = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "arr"),
@@ -55,7 +55,7 @@ class ArrayTest {
         executor.execute(List.of(arrDecl, print));
 
         // Assert
-        assertEquals("null", output());
+        assertEquals("nil", output());
     }
 
     // ── Cycle 2: visitIndexSet 배열 쓰기 ───────────────────────────────────
@@ -176,5 +176,26 @@ class ArrayTest {
         ExecutionError error = assertThrows(ExecutionError.class,
                 () -> executor.execute(List.of(xDecl, print)));
         assertTrue(error.getMessage().contains("배열"));
+    }
+
+    // ── Cycle 7: 배열 크기로 숫자가 아닌 값 ──────────────────────────────
+
+    @Test
+    @DisplayName("[Array] FAIL - 배열 크기로 숫자가 아닌 값을 주면 ExecutionError")
+    void array_FAIL_배열_크기로_숫자가_아닌_값은_에러() {
+        // Arrange
+        Token paren = token(TokenType.LEFT_PAREN, "(");
+
+        Stmt decl = new Stmt.VarDeclare(
+                token(TokenType.IDENTIFIER, "b"),
+                new Expr.Call(
+                        new Expr.Variable(token(TokenType.IDENTIFIER, "Array")),
+                        paren,
+                        List.of(new Expr.Literal("hi"))));
+
+        // Act & Assert
+        ExecutionError error = assertThrows(ExecutionError.class,
+                () -> executor.execute(List.of(decl)));
+        assertTrue(error.getMessage().contains("크기"));
     }
 }
