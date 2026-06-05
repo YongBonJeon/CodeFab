@@ -203,4 +203,19 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Expr argument : expr.arguments) resolve(argument);
         return null;
     }
+
+    @Override
+    public Void visitIndex(Expr.Index expr) {
+        resolve(expr.target);
+        resolve(expr.index);
+        return null;
+    }
+
+    @Override
+    public Void visitIndexSet(Expr.IndexSet expr) {
+        resolve(expr.target);
+        resolve(expr.index);
+        resolve(expr.value);
+        return null;
+    }
 }

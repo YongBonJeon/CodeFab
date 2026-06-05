@@ -7,6 +7,7 @@ import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private final Environment globals;
   private Environment environment;
   private final PrintStream out;
+  private Map<Expr, Integer> locals = new HashMap<>();
+
+  public Executor(PrintStream out) {
+    this.out = out;
+    defineNatives();
   private Map<Expr, Integer> locals = new java.util.HashMap<>();
 
   public Executor(PrintStream out) {
@@ -24,6 +30,24 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   public void resolve(Map<Expr, Integer> locals) {
     this.locals = locals;
+  }
+
+  private void defineNatives() {
+    globals.define("Array", new CodeFabCallable() {
+      @Override
+      public int arity() {
+        return 1;
+      }
+
+      @Override
+      public Object call(Executor executor, List<Object> arguments, Token paren) {
+        Object size = arguments.get(0);
+        if (!(size instanceof Double d) || d != Math.floor(d) || d < 0) {
+          throw new ExecutionError(paren.line, "배열의 크기는 0 이상의 정수여야 합니다.");
+        }
+        return new CodeFabArray(d.intValue());
+      }
+    });
   }
 
   public void execute(List<Stmt> statements) {
@@ -228,6 +252,40 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitGrouping(Expr.Grouping expr) {
     return evaluate(expr.expression);
+  }
+
+  @Override
+  public Object visitIndex(Expr.Index expr) {
+    Object target = evaluate(expr.target);
+    if (!(target instanceof CodeFabArray array)) {
+      throw new ExecutionError(expr.bracket.line, "인덱스 접근은 배열만 지원합니다.");
+    }
+    return array.get(indexOf(expr.index, expr.bracket, array));
+  }
+
+  @Override
+  public Object visitIndexSet(Expr.IndexSet expr) {
+    Object target = evaluate(expr.target);
+    if (!(target instanceof CodeFabArray array)) {
+      throw new ExecutionError(expr.bracket.line, "인덱스 접근은 배열만 지원합니다.");
+    }
+    int index = indexOf(expr.index, expr.bracket, array);
+    Object value = evaluate(expr.value);
+    array.set(index, value);
+    return value;
+  }
+
+  private int indexOf(Expr indexExpr, Token bracket, CodeFabArray array) {
+    Object raw = evaluate(indexExpr);
+    if (!(raw instanceof Double d) || d != Math.floor(d)) {
+      throw new ExecutionError(bracket.line, "배열 인덱스는 정수여야 합니다.");
+    }
+    int index = d.intValue();
+    if (index < 0 || index >= array.size()) {
+      throw new ExecutionError(bracket.line,
+          "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
+    }
+    return index;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
