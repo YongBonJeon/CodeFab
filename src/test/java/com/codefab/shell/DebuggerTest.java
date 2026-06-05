@@ -96,4 +96,18 @@ class DebuggerTest {
         assertTrue(output.contains("[DEBUG] 5번째 줄에서 정지"));
         assertFalse(output.contains("[DEBUG] 3번째 줄에서 정지"));
     }
+
+    // ── Cycle 13: remove ──────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - remove 명령으로 breakpoint를 해제하면 해당 줄에서 정지하지 않는다")
+    void debugger_PASS_remove_명령으로_breakpoint를_해제하면_정지하지_않는다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → break 3 설정 → remove 3 해제 → continue → 정지 없이 종료
+        String commands = "break 3\nremove 3\ncontinue\n";
+        String output = debug(source, commands);
+
+        assertFalse(output.contains("[DEBUG] 3번째 줄에서 정지"));
+        assertTrue(output.contains("[DEBUG] 실행 종료"));
+    }
 }
