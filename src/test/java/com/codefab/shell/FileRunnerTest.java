@@ -53,4 +53,17 @@ class FileRunnerTest {
         assertEquals(0, exitCode);
         assertEquals("42", output());
     }
+
+    // ── Cycle 2: 파일 없음 ───────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[run] FAIL - 존재하지 않는 파일이면 에러 메시지를 출력하고 exit code 66을 반환한다")
+    void run_FAIL_존재하지_않는_파일이면_에러를_반환한다() {
+        // Act
+        int exitCode = runner.run("존재하지않는파일.cfab");
+
+        // Assert
+        assertEquals(66, exitCode);
+        assertEquals("[오류] 파일을 찾을 수 없습니다: 존재하지않는파일.cfab", error());
+    }
 }
