@@ -181,7 +181,10 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitIndexSet(Expr.IndexSet expr) {
-    CodeFabArray array = (CodeFabArray) evaluate(expr.target);
+    Object target = evaluate(expr.target);
+    if (!(target instanceof CodeFabArray array)) {
+      throw new ExecutionError(expr.bracket.line, "인덱스 접근은 배열만 지원합니다.");
+    }
     int index = indexOf(expr.index, expr.bracket, array);
     Object value = evaluate(expr.value);
     array.set(index, value);
