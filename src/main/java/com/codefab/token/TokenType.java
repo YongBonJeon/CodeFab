@@ -6,6 +6,7 @@ public enum TokenType {
     SEMICOLON,
     PLUS, MINUS, STAR, SLASH, PERCENT,
     EQUAL, GREATER, LESS, BANG,
+    EQUAL_EQUAL, BANG_EQUAL, GREATER_EQUAL, LESS_EQUAL,
 
     IDENTIFIER, STRING, NUMBER,
 
@@ -13,6 +14,7 @@ public enum TokenType {
     TRUE, FALSE,
     AND, OR,
     PRINT,
+    FUNC, RETURN,
 
     EOF
 }

@@ -24,6 +24,9 @@ public class Tokenizer {
     KEYWORDS.put("and", AND);
     KEYWORDS.put("or", OR);
     KEYWORDS.put("print", PRINT);
+    KEYWORDS.put("Func", FUNC);
+    KEYWORDS.put("func", FUNC);
+    KEYWORDS.put("return", RETURN);
   }
 
   private final String source;
@@ -53,6 +56,7 @@ public class Tokenizer {
       case '{' -> addToken(LEFT_BRACE);
       case '}' -> addToken(RIGHT_BRACE);
       case ';' -> addToken(SEMICOLON);
+      case ',' -> addToken(COMMA);
       case '+' -> addToken(PLUS);
       case '-' -> addToken(MINUS);
       case '*' -> addToken(STAR);
@@ -66,10 +70,10 @@ public class Tokenizer {
           addToken(SLASH);
         }
       }
-      case '=' -> addToken(EQUAL);
-      case '>' -> addToken(GREATER);
-      case '<' -> addToken(LESS);
-      case '!' -> addToken(BANG);
+      case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+      case '>' -> addToken(match('=') ? GREATER_EQUAL : GREATER);
+      case '<' -> addToken(match('=') ? LESS_EQUAL : LESS);
+      case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
       case ' ', '\r', '\t' -> {
       }
       case '\n' -> line++;

@@ -1,6 +1,7 @@
 package com.codefab.ast;
 
 import com.codefab.token.Token;
+import java.util.List;
 
 public abstract class Expr {
 
@@ -18,6 +19,8 @@ public abstract class Expr {
     R visitLogical(Logical expr);
 
     R visitGrouping(Grouping expr);
+
+    R visitCall(Call expr);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -122,6 +125,24 @@ public abstract class Expr {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitGrouping(this);
+    }
+  }
+
+  /** Function call: {@code callee(arguments)} (e.g. {@code add(1, 2)}). */
+  public static final class Call extends Expr {
+    public final Expr callee;
+    public final Token paren;
+    public final List<Expr> arguments;
+
+    public Call(Expr callee, Token paren, List<Expr> arguments) {
+      this.callee = callee;
+      this.paren = paren;
+      this.arguments = arguments;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitCall(this);
     }
   }
 }
