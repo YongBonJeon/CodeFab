@@ -179,7 +179,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitIndexSet(Expr.IndexSet expr) {
     CodeFabArray array = (CodeFabArray) evaluate(expr.target);
-    int index = (int) (double) evaluate(expr.index);
+    int index = indexOf(expr.index, expr.bracket, array);
     Object value = evaluate(expr.value);
     array.set(index, value);
     return value;
@@ -190,7 +190,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     if (!(raw instanceof Double d) || d != Math.floor(d)) {
       throw new ExecutionError(bracket.line, "배열 인덱스는 정수여야 합니다.");
     }
-    int index = (int) (double) d;
+    int index = d.intValue();
     if (index < 0 || index >= array.size()) {
       throw new ExecutionError(bracket.line,
           "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
