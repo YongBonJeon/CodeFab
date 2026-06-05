@@ -44,7 +44,7 @@ class FactoryShellTest {
     @DisplayName("[dispatch] PASS - 'run <file>' 명령은 파일을 실행하고 exit code 0을 반환한다")
     void dispatch_PASS_run_파일을_실행하고_exit_code_0을_반환한다(@TempDir Path tempDir) throws Exception {
         // Arrange
-        Path file = tempDir.resolve("test.cfab");
+        Path file = tempDir.resolve("test.txt");
         Files.writeString(file, "print 42;");
 
         // Act
@@ -61,7 +61,7 @@ class FactoryShellTest {
     @DisplayName("[dispatch] PASS - 파일 경로만 인자로 주면 run의 단축형으로 실행된다")
     void dispatch_PASS_파일경로만_주면_단축형으로_실행된다(@TempDir Path tempDir) throws Exception {
         // Arrange
-        Path file = tempDir.resolve("test.cfab");
+        Path file = tempDir.resolve("test.txt");
         Files.writeString(file, "print 99;");
 
         // Act
