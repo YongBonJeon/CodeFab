@@ -87,6 +87,7 @@ public class Debugger implements ExecutionListener {
         case "breakpoints" -> listBreakpoints();
         case "watch" -> addWatch(parts);
         case "unwatch" -> removeWatch(parts);
+        case "watches" -> printWatches();
         case "inspect" -> inspect();
         default -> { }
       }
