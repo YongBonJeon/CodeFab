@@ -140,8 +140,8 @@ public class Debugger implements ExecutionListener {
   }
 
   private void removeBreakpoint(String[] parts) {
-    if (parts.length < 2) return;
-    int lineNo = Integer.parseInt(parts[1]);
+    Integer lineNo = parseLine(parts);
+    if (lineNo == null) return;
     if (breakpoints.remove(lineNo)) {
       out.println("[DEBUG] " + lineNo + "번째 줄 breakpoint 해제");
     } else {
@@ -150,10 +150,20 @@ public class Debugger implements ExecutionListener {
   }
 
   private void setBreakpoint(String[] parts) {
-    if (parts.length < 2) return;
-    int lineNo = Integer.parseInt(parts[1]);
+    Integer lineNo = parseLine(parts);
+    if (lineNo == null) return;
     breakpoints.add(lineNo);
     out.println("[DEBUG] " + lineNo + "번째 줄에 breakpoint 설정");
+  }
+
+  private Integer parseLine(String[] parts) {
+    if (parts.length < 2) return null;
+    try {
+      return Integer.parseInt(parts[1]);
+    } catch (NumberFormatException e) {
+      out.println("[DEBUG] 잘못된 줄 번호: " + parts[1]);
+      return null;
+    }
   }
 
   private String sourceText(int line) {
