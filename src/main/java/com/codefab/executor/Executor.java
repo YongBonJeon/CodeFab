@@ -173,12 +173,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visitIndex(Expr.Index expr) {
     CodeFabArray array = (CodeFabArray) evaluate(expr.target);
-    int index = (int) (double) evaluate(expr.index);
-    if (index < 0 || index >= array.size()) {
-      throw new ExecutionError(expr.bracket.line,
-          "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
-    }
-    return array.get(index);
+    return array.get(indexOf(expr.index, expr.bracket, array));
   }
 
   @Override
@@ -188,6 +183,15 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     Object value = evaluate(expr.value);
     array.set(index, value);
     return value;
+  }
+
+  private int indexOf(Expr indexExpr, Token bracket, CodeFabArray array) {
+    int index = (int) (double) evaluate(indexExpr);
+    if (index < 0 || index >= array.size()) {
+      throw new ExecutionError(bracket.line,
+          "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
+    }
+    return index;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
