@@ -1,6 +1,12 @@
 package com.codefab.shell;
 
+import com.codefab.CodeFab;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FileRunner {
 
@@ -13,6 +19,19 @@ public class FileRunner {
   }
 
   public int run(String path) {
-    throw new UnsupportedOperationException("FileRunner 미구현");
+    Path file = Paths.get(path);
+    if (!Files.exists(file)) {
+      err.println("[오류] 파일을 찾을 수 없습니다: " + path);
+      return 66;
+    }
+    String source;
+    try {
+      source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      err.println("[오류] 파일을 읽을 수 없습니다: " + path + " (" + e.getMessage() + ")");
+      return 66;
+    }
+    CodeFab fab = new CodeFab(out, err);
+    return fab.run(source) ? 0 : 70;
   }
 }
