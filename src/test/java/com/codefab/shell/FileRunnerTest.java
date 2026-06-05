@@ -66,4 +66,21 @@ class FileRunnerTest {
         assertEquals(66, exitCode);
         assertEquals("[오류] 파일을 찾을 수 없습니다: 존재하지않는파일.cfab", error());
     }
+
+    // ── Cycle 3: 런타임 에러 ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[run] FAIL - 런타임 에러가 발생하면 에러 메시지를 출력하고 exit code 70을 반환한다")
+    void run_FAIL_런타임_에러가_발생하면_exit_code_70을_반환한다(@TempDir Path tempDir) throws Exception {
+        // Arrange
+        Path file = tempDir.resolve("error.cfab");
+        Files.writeString(file, "print 1 / 0;");
+
+        // Act
+        int exitCode = runner.run(file.toString());
+
+        // Assert
+        assertEquals(70, exitCode);
+        assertEquals(true, error().contains("0으로 나눌 수 없습니다"));
+    }
 }
