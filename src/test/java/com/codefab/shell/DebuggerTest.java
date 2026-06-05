@@ -9,6 +9,7 @@ import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Debugger 테스트")
@@ -74,5 +75,25 @@ class DebuggerTest {
 
         assertTrue(output.contains("x = 1"));
         assertTrue(output.contains("y = 2"));
+    }
+
+    // ── Cycle 12: next ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - next 명령은 블록 내부에 진입하지 않고 다음 문장으로 이동한다")
+    void debugger_PASS_next_명령은_블록_내부에_진입하지_않는다() {
+        // line 1: var x = 1;
+        // line 2: {
+        // line 3:   var y = 2;   ← next 모드에서 이 줄은 정지하지 않아야 함
+        // line 4: }
+        // line 5: print x;
+        String source = "var x = 1;\n{\nvar y = 2;\n}\nprint x;";
+        String commands = "next\nnext\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("[DEBUG] 1번째 줄에서 정지"));
+        assertTrue(output.contains("[DEBUG] 2번째 줄에서 정지"));
+        assertTrue(output.contains("[DEBUG] 5번째 줄에서 정지"));
+        assertFalse(output.contains("[DEBUG] 3번째 줄에서 정지"));
     }
 }
