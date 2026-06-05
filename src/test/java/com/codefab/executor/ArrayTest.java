@@ -80,4 +80,34 @@ class ArrayTest {
         // Assert
         assertEquals("10", output());
     }
+
+    // ── Cycle 3: 인덱스 표현식 ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[visitIndex] PASS - 인덱스로 표현식(계산식)을 사용할 수 있다")
+    void visitIndex_PASS_인덱스로_표현식을_사용할_수_있다() {
+        // Arrange
+        Token arrToken = token(TokenType.IDENTIFIER, "arr");
+        Token iToken = token(TokenType.IDENTIFIER, "i");
+        Token bracket = token(TokenType.LEFT_BRACKET, "[");
+        Token minus = token(TokenType.MINUS, "-");
+
+        Stmt arrDecl = new Stmt.VarDeclare(arrToken, new Expr.Literal(new CodeFabArray(3)));
+        Stmt iDecl = new Stmt.VarDeclare(iToken, new Expr.Literal(2.0));
+        Stmt write = new Stmt.Expression(new Expr.IndexSet(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Binary(new Expr.Variable(iToken), minus, new Expr.Literal(1.0)),
+                new Expr.Literal(7.0)));
+        Stmt print = new Stmt.Print(new Expr.Index(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Literal(1.0)));
+
+        // Act
+        executor.execute(List.of(arrDecl, iDecl, write, print));
+
+        // Assert
+        assertEquals("7", output());
+    }
 }
