@@ -83,6 +83,7 @@ public class Debugger implements ExecutionListener {
         case "next" -> { mode = Mode.NEXT; nextDepthLimit = depth; return; }
         case "continue" -> { mode = Mode.CONTINUE; return; }
         case "break" -> setBreakpoint(parts);
+        case "remove" -> removeBreakpoint(parts);
         case "watch" -> addWatch(parts);
         case "inspect" -> inspect();
         default -> { }
@@ -136,6 +137,16 @@ public class Debugger implements ExecutionListener {
       return text.endsWith(".0") ? text.substring(0, text.length() - 2) : text;
     }
     return value.toString();
+  }
+
+  private void removeBreakpoint(String[] parts) {
+    if (parts.length < 2) return;
+    int lineNo = Integer.parseInt(parts[1]);
+    if (breakpoints.remove(lineNo)) {
+      out.println("[DEBUG] " + lineNo + "번째 줄 breakpoint 해제");
+    } else {
+      out.println("[DEBUG] " + lineNo + "번째 줄에 breakpoint 가 없습니다.");
+    }
   }
 
   private void setBreakpoint(String[] parts) {
