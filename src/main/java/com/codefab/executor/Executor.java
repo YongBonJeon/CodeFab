@@ -19,13 +19,9 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   public Executor(PrintStream out) {
     this.out = out;
-    defineNatives();
-  private Map<Expr, Integer> locals = new java.util.HashMap<>();
-
-  public Executor(PrintStream out) {
-    this.out = out;
     this.globals = new Environment();
     this.environment = globals;
+    defineNatives();
   }
 
   public void resolve(Map<Expr, Integer> locals) {
