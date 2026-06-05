@@ -178,9 +178,11 @@ public class Parser {
     if (match(EQUAL)) {
       Token equals = previous();
       Expr value = assignment();
-      if (expr instanceof Expr.Variable) {
-        Token name = ((Expr.Variable) expr).name;
-        return new Expr.Assign(name, value);
+      if (expr instanceof Expr.Variable variable) {
+        return new Expr.Assign(variable.name, value);
+      }
+      if (expr instanceof Expr.Index index) {
+        return new Expr.IndexSet(index.target, index.bracket, index.index, value);
       }
       throw new ParseError(equals.line, "잘못된 대입 대상입니다.");
     }
@@ -258,8 +260,17 @@ public class Parser {
 
   private Expr call() {
     Expr expr = primary();
-    while (match(LEFT_PAREN)) {
-      expr = finishCall(expr);
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+      } else if (match(LEFT_BRACKET)) {
+        Token bracket = previous();
+        Expr index = expression();
+        consume(RIGHT_BRACKET, "인덱스 뒤에 ']' 가 필요합니다.");
+        expr = new Expr.Index(expr, bracket, index);
+      } else {
+        break;
+      }
     }
     return expr;
   }
