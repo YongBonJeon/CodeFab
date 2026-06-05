@@ -41,8 +41,23 @@ public class Parser {
   }
 
   private Stmt declaration() {
+    if (match(FUNC)) return function();
     if (match(VAR)) return varDeclaration();
     return statement();
+  }
+
+  private Stmt function() {
+    Token name = consume(IDENTIFIER, "함수 이름이 필요합니다.");
+    consume(LEFT_PAREN, "함수 이름 뒤에 '(' 가 필요합니다.");
+    List<Token> params = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        params.add(consume(IDENTIFIER, "매개변수 이름이 필요합니다."));
+      } while (match(COMMA));
+    }
+    consume(RIGHT_PAREN, "매개변수 목록 뒤에 ')' 가 필요합니다.");
+    consume(LEFT_BRACE, "함수 본문 앞에 '{' 가 필요합니다.");
+    return new Stmt.Function(name, params, block());
   }
 
   private Stmt varDeclaration() {
@@ -59,8 +74,19 @@ public class Parser {
     if (match(PRINT)) return printStatement();
     if (match(IF)) return ifStatement();
     if (match(FOR)) return forStatement();
+    if (match(RETURN)) return returnStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
     return expressionStatement();
+  }
+
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    Expr value = null;
+    if (!check(SEMICOLON)) {
+      value = expression();
+    }
+    consume(SEMICOLON, "return 문 끝에 ';' 가 필요합니다.");
+    return new Stmt.Return(keyword, value);
   }
 
   private Stmt printStatement() {
@@ -153,18 +179,28 @@ public class Parser {
   }
 
   private Expr and() {
-    Expr expr = comparison();
+    Expr expr = equality();
     while (match(AND)) {
       Token op = previous();
-      Expr right = comparison();
+      Expr right = equality();
       expr = new Expr.Logical(expr, op, right);
+    }
+    return expr;
+  }
+
+  private Expr equality() {
+    Expr expr = comparison();
+    while (match(EQUAL_EQUAL, BANG_EQUAL)) {
+      Token op = previous();
+      Expr right = comparison();
+      expr = new Expr.Binary(expr, op, right);
     }
     return expr;
   }
 
   private Expr comparison() {
     Expr expr = term();
-    while (match(GREATER, LESS)) {
+    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
       Token op = previous();
       Expr right = term();
       expr = new Expr.Binary(expr, op, right);
@@ -198,7 +234,26 @@ public class Parser {
       Expr right = unary();
       return new Expr.Unary(op, right);
     }
-    return primary();
+    return call();
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+    while (match(LEFT_PAREN)) {
+      expr = finishCall(expr);
+    }
+    return expr;
+  }
+
+  private Expr finishCall(Expr callee) {
+    List<Expr> arguments = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        arguments.add(expression());
+      } while (match(COMMA));
+    }
+    Token paren = consume(RIGHT_PAREN, "인자 목록 뒤에 ')' 가 필요합니다.");
+    return new Expr.Call(callee, paren, arguments);
   }
 
   private Expr primary() {
