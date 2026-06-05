@@ -5,13 +5,16 @@ import com.codefab.ast.Stmt;
 import com.codefab.error.CodeFabError;
 import com.codefab.executor.ExecutionListener;
 import com.codefab.executor.Executor;
+import com.codefab.executor.CodeFabCallable;
 import com.codefab.executor.Environment;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -79,7 +82,23 @@ public class Debugger implements ExecutionListener {
         case "continue" -> { mode = Mode.CONTINUE; return; }
         case "break" -> setBreakpoint(parts);
         case "watch" -> addWatch(parts);
+        case "inspect" -> inspect();
         default -> { }
+      }
+    }
+  }
+
+  private void inspect() {
+    out.println("──── 현재 스코프 변수 ────");
+    Map<String, Object> seen = new LinkedHashMap<>();
+    for (Environment env = executor.currentEnvironment(); env != null; env = env.enclosing()) {
+      boolean isGlobal = env.enclosing() == null;
+      String label = isGlobal ? "[전역]" : "[로컬]";
+      for (Map.Entry<String, Object> entry : env.values().entrySet()) {
+        if (entry.getValue() instanceof CodeFabCallable) continue;
+        if (seen.containsKey(entry.getKey())) continue;
+        seen.put(entry.getKey(), entry.getValue());
+        out.println(label + " " + entry.getKey() + " = " + stringify(entry.getValue()));
       }
     }
   }
