@@ -14,6 +14,9 @@ public class FactoryShell {
   }
 
   public int dispatch(String[] args) throws IOException {
+    if (args[0].equals("run")) {
+      return new FileRunner(out, err).run(args[1]);
+    }
     throw new UnsupportedOperationException("FactoryShell 미구현");
   }
 }
