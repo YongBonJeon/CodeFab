@@ -33,7 +33,8 @@ class ArrayTest {
         return new Token(type, origin, null, 1);
     }
 
-    // ── Cycle 1: visitIndex 배열 읽기 ──────────────────────────────────────
+    // ── Cycle 1: visitIndex 배열 읽기 ─────────────────────────────────────
+
 
     @Test
     @DisplayName("[visitIndex] PASS - null로 초기화된 배열 원소를 읽으면 null이 출력된다")
@@ -51,5 +52,32 @@ class ArrayTest {
 
         // Assert
         assertEquals("null", output());
+    }
+
+    // ── Cycle 2: visitIndexSet 배열 쓰기 ───────────────────────────────────
+
+    @Test
+    @DisplayName("[visitIndexSet] PASS - 인덱스로 값을 쓰고 읽는다")
+    void visitIndexSet_PASS_인덱스로_값을_쓰고_읽는다() {
+        // Arrange
+        Token arrToken = token(TokenType.IDENTIFIER, "arr");
+        Token bracket = token(TokenType.LEFT_BRACKET, "[");
+
+        Stmt arrDecl = new Stmt.VarDeclare(arrToken, new Expr.Literal(new CodeFabArray(3)));
+        Stmt write = new Stmt.Expression(new Expr.IndexSet(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Literal(0.0),
+                new Expr.Literal(10.0)));
+        Stmt print = new Stmt.Print(new Expr.Index(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Literal(0.0)));
+
+        // Act
+        executor.execute(List.of(arrDecl, write, print));
+
+        // Assert
+        assertEquals("10", output());
     }
 }

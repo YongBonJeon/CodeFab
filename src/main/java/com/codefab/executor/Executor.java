@@ -177,6 +177,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return array.get(index);
   }
 
+  @Override
+  public Object visitIndexSet(Expr.IndexSet expr) {
+    throw new UnsupportedOperationException("visitIndexSet 미구현");
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   private void checkNumberOperand(Object operand, Token operator) {

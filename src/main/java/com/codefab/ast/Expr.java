@@ -20,6 +20,8 @@ public abstract class Expr {
     R visitGrouping(Grouping expr);
 
     R visitIndex(Index expr);
+
+    R visitIndexSet(IndexSet expr);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -141,6 +143,25 @@ public abstract class Expr {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitIndex(this);
+    }
+  }
+
+  public static final class IndexSet extends Expr {
+    public final Expr target;
+    public final Token bracket;
+    public final Expr index;
+    public final Expr value;
+
+    public IndexSet(Expr target, Token bracket, Expr index, Expr value) {
+      this.target = target;
+      this.bracket = bracket;
+      this.index = index;
+      this.value = value;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitIndexSet(this);
     }
   }
 }

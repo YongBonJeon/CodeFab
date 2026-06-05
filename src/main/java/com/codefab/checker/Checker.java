@@ -150,4 +150,12 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         resolve(expr.index);
         return null;
     }
+
+    @Override
+    public Void visitIndexSet(Expr.IndexSet expr) {
+        resolve(expr.target);
+        resolve(expr.index);
+        resolve(expr.value);
+        return null;
+    }
 }
