@@ -170,6 +170,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return evaluate(expr.expression);
   }
 
+  @Override
+  public Object visitIndex(Expr.Index expr) {
+    throw new UnsupportedOperationException("visitIndex 미구현");
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   private void checkNumberOperand(Object operand, Token operator) {
