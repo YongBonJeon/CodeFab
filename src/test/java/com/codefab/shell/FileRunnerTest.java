@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("FileRunner 테스트")
 class FileRunnerTest {
@@ -81,6 +82,6 @@ class FileRunnerTest {
 
         // Assert
         assertEquals(70, exitCode);
-        assertEquals(true, error().contains("0으로 나눌 수 없습니다"));
+        assertTrue(error().contains("0으로 나눌 수 없습니다"));
     }
 }
