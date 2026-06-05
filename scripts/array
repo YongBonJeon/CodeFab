@@ -1,0 +1,15 @@
+var arr1 = Array(3); // 크기 3 의 배열 생성 [null, null, null]
+arr1[0] = 10;
+arr1[1] = 20;
+arr1[2] = 30;
+print arr1[0]; // 10 출력
+var i = 2;
+arr1[i - 1] = 7;
+
+var arr2 = Array(3); // [null, null, null]
+print arr2[5]; // 인덱스 범위 벗어남
+print arr2[“hello”] // 인덱스는 반드시 숫자여야함
+var x = 10;
+print x[0] ; // index 접근은 오직 배열만 지원한다
+
+var arr3 = Array(“hi”); // 배열의 사이즈는 반드시 number
