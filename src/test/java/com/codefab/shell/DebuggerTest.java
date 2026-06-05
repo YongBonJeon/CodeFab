@@ -110,4 +110,17 @@ class DebuggerTest {
         assertFalse(output.contains("[DEBUG] 3번째 줄에서 정지"));
         assertTrue(output.contains("[DEBUG] 실행 종료"));
     }
+
+    // ── Cycle 14: breakpoints 목록 ───────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - breakpoints 명령은 설정된 breakpoint 목록을 출력한다")
+    void debugger_PASS_breakpoints_명령은_설정된_목록을_출력한다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → break 2, break 3 설정 → breakpoints 조회 → continue
+        String commands = "break 2\nbreak 3\nbreakpoints\ncontinue\nstep\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("[DEBUG] breakpoints: [2, 3]"));
+    }
 }
