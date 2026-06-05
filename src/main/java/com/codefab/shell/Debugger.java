@@ -86,6 +86,7 @@ public class Debugger implements ExecutionListener {
         case "remove" -> removeBreakpoint(parts);
         case "breakpoints" -> listBreakpoints();
         case "watch" -> addWatch(parts);
+        case "unwatch" -> removeWatch(parts);
         case "inspect" -> inspect();
         default -> { }
       }
@@ -104,6 +105,15 @@ public class Debugger implements ExecutionListener {
         seen.put(entry.getKey(), entry.getValue());
         out.println(label + " " + entry.getKey() + " = " + stringify(entry.getValue()));
       }
+    }
+  }
+
+  private void removeWatch(String[] parts) {
+    if (parts.length < 2) return;
+    if (watches.remove(parts[1])) {
+      out.println("[WATCH] '" + parts[1] + "' 감시 해제");
+    } else {
+      out.println("[WATCH] '" + parts[1] + "' 는 감시 목록에 없습니다.");
     }
   }
 
