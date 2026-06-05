@@ -196,7 +196,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   private String stringify(Object value) {
-    if (value == null) return "nil";
+    if (value == null) return "null";
     if (value instanceof Double d) {
       String text = d.toString();
       if (text.endsWith(".0")) return text.substring(0, text.length() - 2);
