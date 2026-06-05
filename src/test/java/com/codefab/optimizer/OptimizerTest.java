@@ -95,6 +95,33 @@ class OptimizerTest {
   }
 
   @Test
+  @DisplayName("두 숫자 리터럴의 나머지 연산은 단일 리터럴로 폴딩된다")
+  void foldBinary_modulo() {
+    // 10 % 3 → 1
+    Expr expr = new Expr.Binary(
+        new Expr.Literal(10.0), op(TokenType.PERCENT, "%"), new Expr.Literal(3.0));
+
+    Expr result = optimizeExpr(expr);
+
+    assertInstanceOf(Expr.Literal.class, result);
+    assertEquals(1.0, ((Expr.Literal) result).value);
+    assertEquals(1, optimizer.getFoldCount());
+  }
+
+  @Test
+  @DisplayName("0 으로 나머지 연산하는 상수 표현식은 폴딩하지 않고 런타임에 위임한다")
+  void foldBinary_moduloByZero_notFolded() {
+    // 10 % 0 → 폴딩 안 됨
+    Expr expr = new Expr.Binary(
+        new Expr.Literal(10.0), op(TokenType.PERCENT, "%"), new Expr.Literal(0.0));
+
+    Expr result = optimizeExpr(expr);
+
+    assertInstanceOf(Expr.Binary.class, result);
+    assertEquals(0, optimizer.getFoldCount());
+  }
+
+  @Test
   @DisplayName("변수가 포함된 표현식은 폴딩하지 않는다")
   void foldBinary_withVariable_notFolded() {
     // a + 1 → 그대로 유지

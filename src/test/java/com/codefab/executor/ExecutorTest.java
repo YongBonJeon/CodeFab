@@ -152,6 +152,33 @@ class ExecutorTest {
   }
 
   @Test
+  @DisplayName("두 숫자의 나머지 연산 결과를 출력한다")
+  void printModulo() {
+    // given
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(10.0), token(TokenType.PERCENT, "%"), new Expr.Literal(3.0))
+    );
+
+    // when
+    executor.execute(List.of(stmt));
+
+    // then
+    assertEquals("1", output());
+  }
+
+  @Test
+  @DisplayName("0 으로 나머지 연산을 하면 ExecutionError 가 발생한다")
+  void moduloByZeroThrowsExecutionError() {
+    // given
+    Stmt stmt = new Stmt.Print(
+        new Expr.Binary(new Expr.Literal(10.0), token(TokenType.PERCENT, "%"), new Expr.Literal(0.0))
+    );
+
+    // when & then
+    assertThrows(ExecutionError.class, () -> executor.execute(List.of(stmt)));
+  }
+
+  @Test
   @DisplayName("왼쪽이 오른쪽보다 크면 true를 출력한다")
   void printGreaterThanTrue() {
     // given

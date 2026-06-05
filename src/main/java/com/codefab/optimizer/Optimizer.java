@@ -165,6 +165,10 @@ public class Optimizer implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
         if (b == 0) throw new ArithmeticException();
         yield a / b;
       }
+      case PERCENT -> {
+        if (b == 0) throw new ArithmeticException();
+        yield a % b;
+      }
       case GREATER -> a > b;
       case LESS -> a < b;
       default -> null;

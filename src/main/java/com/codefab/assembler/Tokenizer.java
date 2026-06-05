@@ -56,6 +56,7 @@ public class Tokenizer {
       case '+' -> addToken(PLUS);
       case '-' -> addToken(MINUS);
       case '*' -> addToken(STAR);
+      case '%' -> addToken(PERCENT);
       case '/' -> {
         if (match('/')) {
           while (peek() != '\n' && !isAtEnd()) {

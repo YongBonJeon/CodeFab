@@ -157,6 +157,10 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
         yield left / right;
       }
+      case PERCENT -> {
+        if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
+        yield left % right;
+      }
       case GREATER -> left > right;
       case LESS -> left < right;
       default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.type);
