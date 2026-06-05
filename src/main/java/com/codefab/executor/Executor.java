@@ -174,6 +174,10 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Object visitIndex(Expr.Index expr) {
     CodeFabArray array = (CodeFabArray) evaluate(expr.target);
     int index = (int) (double) evaluate(expr.index);
+    if (index < 0 || index >= array.size()) {
+      throw new ExecutionError(expr.bracket.line,
+          "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
+    }
     return array.get(index);
   }
 
