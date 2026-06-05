@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 public class FileRunner {
 
   private final PrintStream out;
@@ -26,7 +27,7 @@ public class FileRunner {
     }
     String source;
     try {
-      source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+      source = Files.readString(file, StandardCharsets.UTF_8);
     } catch (IOException e) {
       err.println("[오류] 파일을 읽을 수 없습니다: " + path + " (" + e.getMessage() + ")");
       return 66;
