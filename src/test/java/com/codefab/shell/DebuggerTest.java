@@ -61,4 +61,18 @@ class DebuggerTest {
         assertTrue(output.contains("[WATCH] 'x' 감시 등록"));
         assertTrue(output.contains("[WATCH] x = 1"));
     }
+
+    // ── Cycle 11: inspect ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - inspect 명령은 현재 스코프의 변수와 값을 출력한다")
+    void debugger_PASS_inspect_명령은_현재_스코프_변수를_출력한다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → step → 2번 줄 정지 → step → 3번 줄 정지 → inspect → step
+        String commands = "step\nstep\ninspect\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("x = 1"));
+        assertTrue(output.contains("y = 2"));
+    }
 }
