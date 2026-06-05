@@ -16,6 +16,25 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   public Executor(PrintStream out) {
     this.out = out;
+    defineNatives();
+  }
+
+  private void defineNatives() {
+    globals.define("Array", new CodeFabCallable() {
+      @Override
+      public int arity() {
+        return 1;
+      }
+
+      @Override
+      public Object call(Executor executor, List<Object> arguments, Token paren) {
+        Object size = arguments.get(0);
+        if (!(size instanceof Double d) || d != Math.floor(d) || d < 0) {
+          throw new ExecutionError(paren.line, "배열의 크기는 0 이상의 정수여야 합니다.");
+        }
+        return new CodeFabArray(d.intValue());
+      }
+    });
   }
 
   public void execute(List<Stmt> statements) {
