@@ -361,6 +361,68 @@ class CheckerTest {
         assertDoesNotThrow(() -> check(List.of(new Stmt.Expression(bin))));
     }
 
+    // ── 정적 바인딩 distance 검증 ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("같은 블록 내 변수 참조의 distance 는 0 이다")
+    void resolveLocal_같은_스코프_distance_0() {
+        // { var a = 1; print a; }
+        Expr.Variable varRef = new Expr.Variable(id("a"));
+        Stmt block = new Stmt.Block(List.of(
+                new Stmt.VarDeclare(id("a"), new Expr.Literal(1.0)),
+                new Stmt.Print(varRef)
+        ));
+        Checker checker = new Checker();
+        checker.check(List.of(block));
+
+        assertEquals(0, checker.getLocals().get(varRef));
+    }
+
+    @Test
+    @DisplayName("한 단계 바깥 블록의 변수 참조 distance 는 1 이다")
+    void resolveLocal_한단계_바깥_스코프_distance_1() {
+        // var a = 1; { print a; }
+        Expr.Variable varRef = new Expr.Variable(id("a"));
+        Checker checker = new Checker();
+        checker.check(List.of(
+                new Stmt.VarDeclare(id("a"), new Expr.Literal(1.0)),
+                new Stmt.Block(List.of(new Stmt.Print(varRef)))
+        ));
+
+        assertEquals(1, checker.getLocals().get(varRef));
+    }
+
+    @Test
+    @DisplayName("N 단계 중첩된 스코프의 변수 참조 distance 는 N 이다")
+    void resolveLocal_N단계_중첩_distance_N() {
+        // var a = 0; { { { print a; } } }
+        Expr.Variable varRef = new Expr.Variable(id("a"));
+        Stmt innermost = new Stmt.Block(List.of(new Stmt.Print(varRef)));
+        Stmt level2 = new Stmt.Block(List.of(innermost));
+        Stmt level1 = new Stmt.Block(List.of(level2));
+        Checker checker = new Checker();
+        checker.check(List.of(
+                new Stmt.VarDeclare(id("a"), new Expr.Literal(0.0)),
+                level1
+        ));
+
+        assertEquals(3, checker.getLocals().get(varRef));
+    }
+
+    @Test
+    @DisplayName("대입 표현식의 distance 도 올바르게 계산된다")
+    void resolveLocal_대입표현식_distance() {
+        // var a = 0; { a = 1; }
+        Expr.Assign assignExpr = new Expr.Assign(id("a"), new Expr.Literal(1.0));
+        Checker checker = new Checker();
+        checker.check(List.of(
+                new Stmt.VarDeclare(id("a"), new Expr.Literal(0.0)),
+                new Stmt.Block(List.of(new Stmt.Expression(assignExpr)))
+        ));
+
+        assertEquals(1, checker.getLocals().get(assignExpr));
+    }
+
     // ── Cycle 6: visitExpression/Print/Assign 전파 ───────────────────────
 
     @Test
