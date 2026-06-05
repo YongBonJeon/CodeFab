@@ -123,4 +123,19 @@ class DebuggerTest {
 
         assertTrue(output.contains("[DEBUG] breakpoints: [2, 3]"));
     }
+
+    // ── Cycle 15: unwatch ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[Debugger] PASS - unwatch 명령으로 감시를 해제하면 이후 정지 시 값이 출력되지 않는다")
+    void debugger_PASS_unwatch_명령으로_감시_해제하면_값이_출력되지_않는다() {
+        String source = "var x = 1;\nvar y = 2;\nprint x;";
+        // 1번 줄 정지 → watch x → unwatch x → step → 2번 줄 정지 시 x 값 출력 없음
+        String commands = "watch x\nunwatch x\nstep\nstep\nstep\n";
+        String output = debug(source, commands);
+
+        assertTrue(output.contains("[WATCH] 'x' 감시 등록"));
+        assertTrue(output.contains("[WATCH] 'x' 감시 해제"));
+        assertFalse(output.contains("[WATCH] x = 1"));
+    }
 }
