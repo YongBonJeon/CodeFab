@@ -17,6 +17,6 @@ public class FactoryShell {
     if (args[0].equals("run")) {
       return new FileRunner(out, err).run(args[1]);
     }
-    throw new UnsupportedOperationException("FactoryShell 미구현");
+    return new FileRunner(out, err).run(args[0]);
   }
 }
