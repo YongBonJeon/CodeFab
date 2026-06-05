@@ -7,16 +7,23 @@ import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private final Environment globals = new Environment();
   private Environment environment = globals;
   private final PrintStream out;
+  private Map<Expr, Integer> locals = new HashMap<>();
 
   public Executor(PrintStream out) {
     this.out = out;
     defineNatives();
+  }
+
+  public void resolve(Map<Expr, Integer> locals) {
+    this.locals = locals;
   }
 
   private void defineNatives() {
