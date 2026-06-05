@@ -172,8 +172,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitIndex(Expr.Index expr) {
-    Object target = evaluate(expr.target);
-    CodeFabArray array = (CodeFabArray) target;
+    CodeFabArray array = (CodeFabArray) evaluate(expr.target);
     int index = (int) (double) evaluate(expr.index);
     return array.get(index);
   }
