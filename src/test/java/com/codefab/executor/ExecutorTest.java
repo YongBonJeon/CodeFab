@@ -2,6 +2,7 @@ package com.codefab.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.codefab.ast.Expr;
 import com.codefab.ast.Stmt;
@@ -542,5 +543,94 @@ class ExecutorTest {
 
     // when & then
     assertThrows(ExecutionError.class, () -> executor.execute(List.of(stmt)));
+  }
+
+  // ── 정적 바인딩 테스트 ────────────────────────────────────────────────────
+
+  static class TrackingEnvironment extends Environment {
+    int getAtCallCount = 0;
+    int getDynamicCallCount = 0;
+
+    @Override
+    public Object getAt(int distance, String name) {
+      getAtCallCount++;
+      return super.getAt(distance, name);
+    }
+
+    @Override
+    public Object get(com.codefab.token.Token name) {
+      getDynamicCallCount++;
+      return super.get(name);
+    }
+  }
+
+  @Test
+  @DisplayName("정적 바인딩 적용 시 locals 맵에 변수 참조 distance 가 기록된다")
+  void staticBinding_localsMapContainsDistanceForVariableRef() {
+    // given
+    // var a = 1; { print a; }
+    Expr.Variable varRef = new Expr.Variable(token(TokenType.IDENTIFIER, "a"));
+    Stmt varDecl = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(1.0));
+    Stmt block = new Stmt.Block(List.of(new Stmt.Print(varRef)));
+    List<Stmt> stmts = List.of(varDecl, block);
+
+    com.codefab.checker.Checker checker = new com.codefab.checker.Checker();
+    checker.check(stmts);
+
+    // when
+    executor.resolve(checker.getLocals());
+    executor.execute(stmts);
+
+    // then: locals 에 distance 가 기록되어 동적 탐색 없이 즉시 접근 가능
+    assertTrue(checker.getLocals().containsKey(varRef), "varRef 의 distance 가 locals 에 기록되어야 한다");
+    assertEquals(1, checker.getLocals().get(varRef), "한 단계 바깥 변수의 distance 는 1 이어야 한다");
+    assertEquals("1", output());
+  }
+
+  @Test
+  @DisplayName("정적 바인딩으로 깊은 중첩 스코프에서 바깥 변수에 올바르게 접근한다")
+  void staticBinding_deepNestedScopeAccessesOuterVariable() {
+    // given
+    // var a = 42; { { { { { print a; } } } } }
+    Expr.Variable varRef = new Expr.Variable(token(TokenType.IDENTIFIER, "a"));
+    Stmt print = new Stmt.Print(varRef);
+    Stmt nested = new Stmt.Block(List.of(print));
+    for (int i = 0; i < 4; i++) nested = new Stmt.Block(List.of(nested));
+    Stmt varDecl = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "a"), new Expr.Literal(42.0));
+    List<Stmt> stmts = List.of(varDecl, nested);
+
+    com.codefab.checker.Checker checker = new com.codefab.checker.Checker();
+    checker.check(stmts);
+    executor.resolve(checker.getLocals());
+
+    // when
+    executor.execute(stmts);
+
+    // then
+    assertEquals("42", output());
+  }
+
+  @Test
+  @DisplayName("정적 바인딩으로 중첩 스코프에서 바깥 변수 수정이 올바르게 반영된다")
+  void staticBinding_innerScopeModifiesOuterVariable() {
+    // given
+    // var count = 0; { { count = 99; } } print count;
+    Expr.Assign assign = new Expr.Assign(
+        token(TokenType.IDENTIFIER, "count"), new Expr.Literal(99.0));
+    Stmt innerBlock = new Stmt.Block(List.of(new Stmt.Block(List.of(new Stmt.Expression(assign)))));
+    Stmt varDecl = new Stmt.VarDeclare(token(TokenType.IDENTIFIER, "count"), new Expr.Literal(0.0));
+    Expr.Variable varRef = new Expr.Variable(token(TokenType.IDENTIFIER, "count"));
+    Stmt print = new Stmt.Print(varRef);
+    List<Stmt> stmts = List.of(varDecl, innerBlock, print);
+
+    com.codefab.checker.Checker checker = new com.codefab.checker.Checker();
+    checker.check(stmts);
+    executor.resolve(checker.getLocals());
+
+    // when
+    executor.execute(stmts);
+
+    // then
+    assertEquals("99", output());
   }
 }

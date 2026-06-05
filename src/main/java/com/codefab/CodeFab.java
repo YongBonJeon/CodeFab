@@ -32,6 +32,7 @@ public class CodeFab {
       List<Token> tokens = new Tokenizer(source).tokenize();
       List<Stmt> stmts = new Parser(tokens).parse();
       checker.check(stmts);
+      executor.resolve(checker.getLocals());
       executor.execute(stmts);
       return true;
     } catch (CodeFabError e) {

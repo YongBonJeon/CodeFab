@@ -8,12 +8,14 @@ import com.codefab.token.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
+    private final Map<Expr, Integer> locals = new IdentityHashMap<>();
 
     public Checker() {
         beginScope();
@@ -21,6 +23,10 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     public void check(List<Stmt> statements) {
         for (Stmt s : statements) resolve(s);
+    }
+
+    public Map<Expr, Integer> getLocals() {
+        return locals;
     }
 
     private void resolve(Stmt stmt) {
@@ -50,6 +56,17 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void define(Token name) {
         scopes.peek().put(name.origin, Boolean.TRUE);
+    }
+
+    private void resolveLocal(Expr expr, String name) {
+        int i = 0;
+        for (Map<String, Boolean> scope : scopes) {
+            if (scope.containsKey(name)) {
+                locals.put(expr, i);
+                return;
+            }
+            i++;
+        }
     }
 
     @Override
@@ -109,12 +126,14 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
             throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
         }
+        resolveLocal(expr, expr.name.origin);
         return null;
     }
 
     @Override
     public Void visitAssign(Expr.Assign expr) {
         resolve(expr.value);
+        resolveLocal(expr, expr.name.origin);
         return null;
     }
 
