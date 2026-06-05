@@ -34,8 +34,8 @@ public class CodeFab {
     try {
       List<Token> tokens = new Tokenizer(source).tokenize();
       List<Stmt> stmts = new Parser(tokens).parse();
-      checker.check(stmts);
       stmts = optimizer.optimize(stmts);
+      checker.check(stmts);
       executor.resolve(checker.getLocals());
       executor.execute(stmts);
       return true;
