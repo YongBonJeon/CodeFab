@@ -76,6 +76,17 @@ public class Optimizer implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
     return new Stmt.For(init, cond, inc, opt(stmt.body));
   }
 
+  @Override
+  public Stmt visitFunction(Stmt.Function stmt) {
+    return new Stmt.Function(stmt.name, stmt.params, optimize(stmt.body));
+  }
+
+  @Override
+  public Stmt visitReturn(Stmt.Return stmt) {
+    Expr value = stmt.value != null ? opt(stmt.value) : null;
+    return new Stmt.Return(stmt.keyword, value);
+  }
+
   // ── Expr visitors: fold where everything is constant ─────────────────────
 
   @Override
@@ -131,6 +142,25 @@ public class Optimizer implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
       }
     }
     return new Expr.Unary(expr.operator, right);
+  }
+
+  @Override
+  public Expr visitCall(Expr.Call expr) {
+    List<Expr> args = new ArrayList<>();
+    for (Expr arg : expr.arguments) {
+      args.add(opt(arg));
+    }
+    return new Expr.Call(opt(expr.callee), expr.paren, args);
+  }
+
+  @Override
+  public Expr visitIndex(Expr.Index expr) {
+    return new Expr.Index(opt(expr.target), expr.bracket, opt(expr.index));
+  }
+
+  @Override
+  public Expr visitIndexSet(Expr.IndexSet expr) {
+    return new Expr.IndexSet(opt(expr.target), expr.bracket, opt(expr.index), opt(expr.value));
   }
 
   @Override
