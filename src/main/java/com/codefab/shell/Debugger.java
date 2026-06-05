@@ -5,11 +5,14 @@ import com.codefab.ast.Stmt;
 import com.codefab.error.CodeFabError;
 import com.codefab.executor.ExecutionListener;
 import com.codefab.executor.Executor;
+import com.codefab.executor.Environment;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class Debugger implements ExecutionListener {
@@ -23,6 +26,7 @@ public class Debugger implements ExecutionListener {
   private final String[] sourceLines;
 
   private final TreeSet<Integer> breakpoints = new TreeSet<>();
+  private final Set<String> watches = new LinkedHashSet<>();
   private Mode mode = Mode.STEP;
 
   public Debugger(String source, BufferedReader in, PrintStream out) {
@@ -59,6 +63,7 @@ public class Debugger implements ExecutionListener {
 
     String marker = (atBreakpoint && !pauseByStep) ? " (breakpoint)" : "";
     out.println("[DEBUG] " + stmt.line + "번째 줄에서 정지" + marker + " → " + sourceText(stmt.line));
+    printWatches();
     readCommands();
   }
 
@@ -73,9 +78,43 @@ public class Debugger implements ExecutionListener {
         case "step" -> { mode = Mode.STEP; return; }
         case "continue" -> { mode = Mode.CONTINUE; return; }
         case "break" -> setBreakpoint(parts);
+        case "watch" -> addWatch(parts);
         default -> { }
       }
     }
+  }
+
+  private void addWatch(String[] parts) {
+    if (parts.length < 2) return;
+    watches.add(parts[1]);
+    out.println("[WATCH] '" + parts[1] + "' 감시 등록");
+  }
+
+  private void printWatches() {
+    for (String name : watches) {
+      Environment env = findDefiningScope(name);
+      if (env == null) {
+        out.println("[WATCH] " + name + " = (정의되지 않음)");
+      } else {
+        out.println("[WATCH] " + name + " = " + stringify(env.values().get(name)));
+      }
+    }
+  }
+
+  private Environment findDefiningScope(String name) {
+    for (Environment env = executor.currentEnvironment(); env != null; env = env.enclosing()) {
+      if (env.containsLocally(name)) return env;
+    }
+    return null;
+  }
+
+  private String stringify(Object value) {
+    if (value == null) return "null";
+    if (value instanceof Double d) {
+      String text = d.toString();
+      return text.endsWith(".0") ? text.substring(0, text.length() - 2) : text;
+    }
+    return value.toString();
   }
 
   private void setBreakpoint(String[] parts) {
