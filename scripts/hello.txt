@@ -1,0 +1,11 @@
+// CodeFab Hello World
+// 실행: factory run ./scripts/hello.txt
+
+print "Hello, CodeFab!";
+
+var name = "Factory";
+print "Welcome to " + name + " Shell!";
+
+print 1 + 2 * 3;
+print true;
+print 3.14;
