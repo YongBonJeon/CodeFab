@@ -13,15 +13,19 @@ import java.util.List;
 /**
  * Recursive-descent parser. Grammar:
  *
- * <p>program -> declaration* EOF declaration -> varDecl | statement varDecl -> "var" IDENTIFIER
- * ("=" expression)? ";" statement -> printStmt | ifStmt | forStmt | block | exprStmt printStmt ->
- * "print" expression ";" ifStmt -> "if" "(" expression ")" statement ("else" statement)? forStmt ->
- * "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement block -> "{"
- * declaration* "}" exprStmt -> expression ";" expression -> assignment assignment -> IDENTIFIER "="
- * assignment | logic_or logic_or -> logic_and ("or" logic_and)* logic_and -> comparison ("and"
- * comparison)* comparison -> term ((">" | "<") term)* term -> factor (("+" | "-") factor)* factor
- * -> unary (("*" | "/") unary)* unary -> ("!" | "-") unary | primary primary -> NUMBER | STRING |
- * "true" | "false" | "(" expression ")" | IDENTIFIER
+ * <p>program -> declaration* EOF declaration -> funcDecl | varDecl | statement funcDecl -> "Func"
+ * IDENTIFIER "(" parameters? ")" block parameters -> IDENTIFIER ("," IDENTIFIER)* varDecl -> "var"
+ * IDENTIFIER ("=" expression)? ";" statement -> printStmt | ifStmt | forStmt | returnStmt | block |
+ * exprStmt printStmt -> "print" expression ";" returnStmt -> "return" expression? ";" ifStmt -> "if"
+ * "(" expression ")" statement ("else" statement)? forStmt -> "for" "(" (varDecl | exprStmt | ";")
+ * expression? ";" expression? ")" statement block -> "{" declaration* "}" exprStmt -> expression ";"
+ * expression -> assignment assignment -> (call ".")? (IDENTIFIER | index) "=" assignment | logic_or
+ * logic_or -> logic_and ("or" logic_and)* logic_and -> equality ("and" equality)* equality ->
+ * comparison (("==" | "!=") comparison)* comparison -> term ((">" | ">=" | "<" | "<=") term)* term ->
+ * factor (("+" | "-") factor)* factor -> unary (("*" | "/" | "%")
+ * unary)* unary -> ("!" | "-") unary | call call -> primary ("(" arguments? ")" | "[" expression
+ * "]")* arguments -> expression ("," expression)* primary -> NUMBER | STRING | "true" | "false" |
+ * "(" expression ")" | IDENTIFIER
  */
 public class Parser {
 
@@ -41,8 +45,32 @@ public class Parser {
   }
 
   private Stmt declaration() {
-    if (match(VAR)) return varDeclaration();
-    return statement();
+    int line = peek().line;
+    Stmt stmt;
+    if (match(FUNC)) {
+      stmt = function();
+    } else if (match(VAR)) {
+      stmt = varDeclaration();
+    } else {
+      stmt = statement();
+    }
+    if (stmt.line == 0) stmt.line = line;
+    return stmt;
+  }
+
+  private Stmt function() {
+    Token name = consume(IDENTIFIER, "함수 이름이 필요합니다.");
+    consume(LEFT_PAREN, "함수 이름 뒤에 '(' 가 필요합니다.");
+    List<Token> params = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        params.add(consume(IDENTIFIER, "매개변수 이름이 필요합니다."));
+      } while (match(COMMA));
+    }
+    consume(RIGHT_PAREN, "매개변수 목록 뒤에 ')' 가 필요합니다.");
+    consume(LEFT_BRACE, "함수 본문 앞에 '{' 가 필요합니다.");
+    List<Stmt> body = block();
+    return new Stmt.Function(name, params, body);
   }
 
   private Stmt varDeclaration() {
@@ -56,11 +84,29 @@ public class Parser {
   }
 
   private Stmt statement() {
+    int line = peek().line;
+    Stmt stmt = statementBody();
+    if (stmt.line == 0) stmt.line = line;
+    return stmt;
+  }
+
+  private Stmt statementBody() {
     if (match(PRINT)) return printStatement();
     if (match(IF)) return ifStatement();
     if (match(FOR)) return forStatement();
+    if (match(RETURN)) return returnStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
     return expressionStatement();
+  }
+
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    Expr value = null;
+    if (!check(SEMICOLON)) {
+      value = expression();
+    }
+    consume(SEMICOLON, "return 문 끝에 ';' 가 필요합니다.");
+    return new Stmt.Return(keyword, value);
   }
 
   private Stmt printStatement() {
@@ -133,9 +179,11 @@ public class Parser {
     if (match(EQUAL)) {
       Token equals = previous();
       Expr value = assignment();
-      if (expr instanceof Expr.Variable) {
-        Token name = ((Expr.Variable) expr).name;
-        return new Expr.Assign(name, value);
+      if (expr instanceof Expr.Variable variable) {
+        return new Expr.Assign(variable.name, value);
+      }
+      if (expr instanceof Expr.Index index) {
+        return new Expr.IndexSet(index.target, index.bracket, index.index, value);
       }
       throw new ParseError(equals.line, "잘못된 대입 대상입니다.");
     }
@@ -153,18 +201,28 @@ public class Parser {
   }
 
   private Expr and() {
-    Expr expr = comparison();
+    Expr expr = equality();
     while (match(AND)) {
       Token op = previous();
-      Expr right = comparison();
+      Expr right = equality();
       expr = new Expr.Logical(expr, op, right);
+    }
+    return expr;
+  }
+
+  private Expr equality() {
+    Expr expr = comparison();
+    while (match(EQUAL_EQUAL, BANG_EQUAL)) {
+      Token op = previous();
+      Expr right = comparison();
+      expr = new Expr.Binary(expr, op, right);
     }
     return expr;
   }
 
   private Expr comparison() {
     Expr expr = term();
-    while (match(GREATER, LESS)) {
+    while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
       Token op = previous();
       Expr right = term();
       expr = new Expr.Binary(expr, op, right);
@@ -184,7 +242,7 @@ public class Parser {
 
   private Expr factor() {
     Expr expr = unary();
-    while (match(STAR, SLASH)) {
+    while (match(STAR, SLASH, PERCENT)) {
       Token op = previous();
       Expr right = unary();
       expr = new Expr.Binary(expr, op, right);
@@ -198,7 +256,36 @@ public class Parser {
       Expr right = unary();
       return new Expr.Unary(op, right);
     }
-    return primary();
+    return call();
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+    while (true) {
+      if (match(LEFT_PAREN)) {
+        expr = finishCall(expr);
+      } else if (match(LEFT_BRACKET)) {
+        Token bracket = previous();
+        Expr index = expression();
+        consume(RIGHT_BRACKET, "인덱스 뒤에 ']' 가 필요합니다.");
+        expr = new Expr.Index(expr, bracket, index);
+      } else {
+        break;
+      }
+    }
+    return expr;
+  }
+
+  private Expr finishCall(Expr callee) {
+    Token paren = previous();
+    List<Expr> arguments = new ArrayList<>();
+    if (!check(RIGHT_PAREN)) {
+      do {
+        arguments.add(expression());
+      } while (match(COMMA));
+    }
+    paren = consume(RIGHT_PAREN, "인자 목록 뒤에 ')' 가 필요합니다.");
+    return new Expr.Call(callee, paren, arguments);
   }
 
   private Expr primary() {

@@ -5,6 +5,12 @@ import java.util.List;
 
 public abstract class Stmt {
 
+  /**
+   * Source line where this statement begins. Used by the debug shell for breakpoints and stepping.
+   * Defaults to {@code 0} when not set by the parser (e.g. AST built directly in tests).
+   */
+  public int line = 0;
+
   public interface Visitor<R> {
     R visitExpression(Expression stmt);
 
@@ -17,6 +23,10 @@ public abstract class Stmt {
     R visitIf(If stmt);
 
     R visitFor(For stmt);
+
+    R visitFunction(Function stmt);
+
+    R visitReturn(Return stmt);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -108,6 +118,40 @@ public abstract class Stmt {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitFor(this);
+    }
+  }
+
+  /** Function declaration: {@code Func name(params) { body }}. */
+  public static final class Function extends Stmt {
+    public final Token name;
+    public final List<Token> params;
+    public final List<Stmt> body;
+
+    public Function(Token name, List<Token> params, List<Stmt> body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitFunction(this);
+    }
+  }
+
+  /** Return statement: {@code return;} or {@code return value;}. */
+  public static final class Return extends Stmt {
+    public final Token keyword;
+    public final Expr value;
+
+    public Return(Token keyword, Expr value) {
+      this.keyword = keyword;
+      this.value = value;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitReturn(this);
     }
   }
 }

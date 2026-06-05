@@ -6,15 +6,69 @@ import com.codefab.error.ExecutionError;
 import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private final Environment globals = new Environment();
   private Environment environment = globals;
   private final PrintStream out;
 
+  /** Pre-computed scope distances for resolved local variables (static binding). */
+  private final Map<Expr, Integer> locals = new HashMap<>();
+
+  /** Optional hook used by the debug shell; null in normal runs. */
+  private ExecutionListener listener;
+
+  /** Current block-nesting depth, exposed to the listener for step/next granularity. */
+  private int depth = 0;
+
   public Executor(PrintStream out) {
     this.out = out;
+    defineNatives();
+  }
+
+  /** Registers built-in functions available to every program. */
+  private void defineNatives() {
+    globals.define("clock", new CodeFabCallable() {
+      @Override
+      public int arity() {
+        return 0;
+      }
+
+      @Override
+      public Object call(Executor executor, List<Object> arguments, Token paren) {
+        return (double) System.currentTimeMillis();
+      }
+
+      @Override
+      public String toString() {
+        return "<native fn clock>";
+      }
+    });
+
+    globals.define("Array", new CodeFabCallable() {
+      @Override
+      public int arity() {
+        return 1;
+      }
+
+      @Override
+      public Object call(Executor executor, List<Object> arguments, Token paren) {
+        Object size = arguments.get(0);
+        if (!(size instanceof Double d) || d != Math.floor(d) || d < 0) {
+          throw new ExecutionError(paren.line, "배열의 크기는 0 이상의 정수여야 합니다.");
+        }
+        return new CodeFabArray((int) (double) d);
+      }
+
+      @Override
+      public String toString() {
+        return "<native fn Array>";
+      }
+    });
   }
 
   public void execute(List<Stmt> statements) {
@@ -24,6 +78,9 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   private void execute(Stmt stmt) {
+    if (listener != null) {
+      listener.beforeStatement(stmt, depth);
+    }
     stmt.accept(this);
   }
 
@@ -34,13 +91,36 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   void executeBlock(List<Stmt> statements, Environment newEnvironment) {
     Environment previous = this.environment;
     this.environment = newEnvironment;
+    this.depth++;
     try {
       for (Stmt stmt : statements) {
         execute(stmt);
       }
     } finally {
       this.environment = previous;
+      this.depth--;
     }
+  }
+
+  /** Records a resolved variable's scope distance (called by the Checker before execution). */
+  public void resolve(Expr expr, int distance) {
+    locals.put(expr, distance);
+  }
+
+  public void setLocals(Map<Expr, Integer> resolved) {
+    locals.putAll(resolved);
+  }
+
+  public void setListener(ExecutionListener listener) {
+    this.listener = listener;
+  }
+
+  public Environment currentEnvironment() {
+    return environment;
+  }
+
+  public Environment globalEnvironment() {
+    return globals;
   }
 
   // ── Stmt Visitors ────────────────────────────────────────────────────────
@@ -60,7 +140,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitVarDeclare(Stmt.VarDeclare stmt) {
-    Object value = evaluate(stmt.initializer);
+    Object value = stmt.initializer != null ? evaluate(stmt.initializer) : null;
     environment.define(stmt.name.origin, value);
     return null;
   }
@@ -85,16 +165,31 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Void visitFor(Stmt.For stmt) {
     Environment previous = this.environment;
     this.environment = new Environment(previous);
+    this.depth++;
     try {
       if (stmt.initializer != null) execute(stmt.initializer);
-      while (isTruthy(evaluate(stmt.condition))) {
+      while (stmt.condition == null || isTruthy(evaluate(stmt.condition))) {
         execute(stmt.body);
         if (stmt.increment != null) evaluate(stmt.increment);
       }
     } finally {
       this.environment = previous;
+      this.depth--;
     }
     return null;
+  }
+
+  @Override
+  public Void visitFunction(Stmt.Function stmt) {
+    CodeFabFunction function = new CodeFabFunction(stmt, environment);
+    environment.define(stmt.name.origin, function);
+    return null;
+  }
+
+  @Override
+  public Void visitReturn(Stmt.Return stmt) {
+    Object value = stmt.value != null ? evaluate(stmt.value) : null;
+    throw new Return(value);
   }
 
   // ── Expr Visitors ────────────────────────────────────────────────────────
@@ -106,14 +201,80 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitVariable(Expr.Variable expr) {
-    return environment.get(expr.name);
+    return lookUpVariable(expr.name, expr);
+  }
+
+  private Object lookUpVariable(Token name, Expr expr) {
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      return environment.getAt(distance, name.origin);
+    }
+    return environment.get(name);
   }
 
   @Override
   public Object visitAssign(Expr.Assign expr) {
     Object value = evaluate(expr.value);
-    environment.assign(expr.name, value);
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      environment.assignAt(distance, expr.name, value);
+    } else {
+      environment.assign(expr.name, value);
+    }
     return value;
+  }
+
+  @Override
+  public Object visitCall(Expr.Call expr) {
+    Object callee = evaluate(expr.callee);
+    List<Object> arguments = new ArrayList<>();
+    for (Expr argument : expr.arguments) {
+      arguments.add(evaluate(argument));
+    }
+    if (!(callee instanceof CodeFabCallable callable)) {
+      throw new ExecutionError(expr.paren.line, "함수만 호출할 수 있습니다.");
+    }
+    if (arguments.size() != callable.arity()) {
+      throw new ExecutionError(expr.paren.line,
+          "인자 개수가 일치하지 않습니다. " + callable.arity() + "개를 기대했지만 " + arguments.size() + "개가 전달되었습니다.");
+    }
+    return callable.call(this, arguments, expr.paren);
+  }
+
+  @Override
+  public Object visitIndex(Expr.Index expr) {
+    Object target = evaluate(expr.target);
+    if (!(target instanceof CodeFabArray array)) {
+      throw new ExecutionError(expr.bracket.line, "인덱스 접근은 배열만 지원합니다.");
+    }
+    int index = indexOf(expr.index, expr.bracket, array);
+    return array.get(index);
+  }
+
+  @Override
+  public Object visitIndexSet(Expr.IndexSet expr) {
+    Object target = evaluate(expr.target);
+    if (!(target instanceof CodeFabArray array)) {
+      throw new ExecutionError(expr.bracket.line, "인덱스 접근은 배열만 지원합니다.");
+    }
+    int index = indexOf(expr.index, expr.bracket, array);
+    Object value = evaluate(expr.value);
+    array.set(index, value);
+    return value;
+  }
+
+  /** Evaluates and validates an array index expression. */
+  private int indexOf(Expr indexExpr, Token bracket, CodeFabArray array) {
+    Object raw = evaluate(indexExpr);
+    if (!(raw instanceof Double d) || d != Math.floor(d)) {
+      throw new ExecutionError(bracket.line, "배열 인덱스는 정수여야 합니다.");
+    }
+    int index = (int) (double) d;
+    if (index < 0 || index >= array.size()) {
+      throw new ExecutionError(bracket.line,
+          "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
+    }
+    return index;
   }
 
   @Override
@@ -124,6 +285,12 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       if (leftVal instanceof String l && rightVal instanceof String r) {
         return l + r;
       }
+    }
+    if (expr.operator.type == TokenType.EQUAL_EQUAL) {
+      return isEqual(leftVal, rightVal);
+    }
+    if (expr.operator.type == TokenType.BANG_EQUAL) {
+      return !isEqual(leftVal, rightVal);
     }
     checkNumberOperands(leftVal, rightVal, expr.operator);
     double left = (double) leftVal;
@@ -136,8 +303,14 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
         yield left / right;
       }
+      case PERCENT -> {
+        if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
+        yield left % right;
+      }
       case GREATER -> left > right;
+      case GREATER_EQUAL -> left >= right;
       case LESS -> left < right;
+      case LESS_EQUAL -> left <= right;
       default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.type);
     };
   }
@@ -182,6 +355,12 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     if (!(left instanceof Double) || !(right instanceof Double)) {
       throw new ExecutionError(operator.line, "피연산자는 숫자여야 합니다");
     }
+  }
+
+  private boolean isEqual(Object a, Object b) {
+    if (a == null && b == null) return true;
+    if (a == null) return false;
+    return a.equals(b);
   }
 
   private boolean isTruthy(Object value) {

@@ -24,6 +24,9 @@ public class Tokenizer {
     KEYWORDS.put("and", AND);
     KEYWORDS.put("or", OR);
     KEYWORDS.put("print", PRINT);
+    KEYWORDS.put("Func", FUNC);
+    KEYWORDS.put("func", FUNC);
+    KEYWORDS.put("return", RETURN);
   }
 
   private final String source;
@@ -33,7 +36,8 @@ public class Tokenizer {
   private int line = 1;
 
   public Tokenizer(String source) {
-    this.source = source;
+    // Strip a leading UTF-8 BOM (U+FEFF) that Windows editors often prepend.
+    this.source = source.startsWith("﻿") ? source.substring(1) : source;
   }
 
   public List<Token> tokenize() {
@@ -52,10 +56,14 @@ public class Tokenizer {
       case ')' -> addToken(RIGHT_PAREN);
       case '{' -> addToken(LEFT_BRACE);
       case '}' -> addToken(RIGHT_BRACE);
+      case '[' -> addToken(LEFT_BRACKET);
+      case ']' -> addToken(RIGHT_BRACKET);
       case ';' -> addToken(SEMICOLON);
+      case ',' -> addToken(COMMA);
       case '+' -> addToken(PLUS);
       case '-' -> addToken(MINUS);
       case '*' -> addToken(STAR);
+      case '%' -> addToken(PERCENT);
       case '/' -> {
         if (match('/')) {
           while (peek() != '\n' && !isAtEnd()) {
@@ -65,10 +73,10 @@ public class Tokenizer {
           addToken(SLASH);
         }
       }
-      case '=' -> addToken(EQUAL);
-      case '>' -> addToken(GREATER);
-      case '<' -> addToken(LESS);
-      case '!' -> addToken(BANG);
+      case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+      case '>' -> addToken(match('=') ? GREATER_EQUAL : GREATER);
+      case '<' -> addToken(match('=') ? LESS_EQUAL : LESS);
+      case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
       case ' ', '\r', '\t' -> {
       }
       case '\n' -> line++;

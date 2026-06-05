@@ -1,6 +1,7 @@
 package com.codefab.ast;
 
 import com.codefab.token.Token;
+import java.util.List;
 
 public abstract class Expr {
 
@@ -18,6 +19,12 @@ public abstract class Expr {
     R visitLogical(Logical expr);
 
     R visitGrouping(Grouping expr);
+
+    R visitCall(Call expr);
+
+    R visitIndex(Index expr);
+
+    R visitIndexSet(IndexSet expr);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -122,6 +129,62 @@ public abstract class Expr {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitGrouping(this);
+    }
+  }
+
+  /** Function call: {@code callee(arguments)} (e.g. {@code add(1, 2)}). */
+  public static final class Call extends Expr {
+    public final Expr callee;
+    public final Token paren;
+    public final List<Expr> arguments;
+
+    public Call(Expr callee, Token paren, List<Expr> arguments) {
+      this.callee = callee;
+      this.paren = paren;
+      this.arguments = arguments;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitCall(this);
+    }
+  }
+
+  /** Array read: {@code target[index]} (e.g. {@code arr[i]}). */
+  public static final class Index extends Expr {
+    public final Expr target;
+    public final Token bracket;
+    public final Expr index;
+
+    public Index(Expr target, Token bracket, Expr index) {
+      this.target = target;
+      this.bracket = bracket;
+      this.index = index;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitIndex(this);
+    }
+  }
+
+  /** Array write: {@code target[index] = value} (e.g. {@code arr[i] = 7}). */
+  public static final class IndexSet extends Expr {
+    public final Expr target;
+    public final Token bracket;
+    public final Expr index;
+    public final Expr value;
+
+    public IndexSet(Expr target, Token bracket, Expr index, Expr value) {
+      this.target = target;
+      this.bracket = bracket;
+      this.index = index;
+      this.value = value;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitIndexSet(this);
     }
   }
 }

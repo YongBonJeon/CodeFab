@@ -3,9 +3,11 @@ package com.codefab.token;
 public enum TokenType {
     LEFT_PAREN, RIGHT_PAREN,
     LEFT_BRACE, RIGHT_BRACE,
-    SEMICOLON,
-    PLUS, MINUS, STAR, SLASH,
+    LEFT_BRACKET, RIGHT_BRACKET,
+    SEMICOLON, COMMA,
+    PLUS, MINUS, STAR, SLASH, PERCENT,
     EQUAL, GREATER, LESS, BANG,
+    EQUAL_EQUAL, BANG_EQUAL, GREATER_EQUAL, LESS_EQUAL,
 
     IDENTIFIER, STRING, NUMBER,
 
@@ -13,6 +15,7 @@ public enum TokenType {
     TRUE, FALSE,
     AND, OR,
     PRINT,
+    FUNC, RETURN,
 
     EOF
 }

@@ -47,6 +47,14 @@ application {
     mainClass.set("com.codefab.Main")
 }
 
+// Runnable jar for the ./factory launcher: java -jar build/libs/factory.jar
+tasks.jar {
+    archiveFileName.set("factory.jar")
+    manifest {
+        attributes["Main-Class"] = "com.codefab.Main"
+    }
+}
+
 tasks.named<JavaExec>("run") {
     standardInput = System.`in`
     args = (project.findProperty("args") as String?)?.split(" ") ?: emptyList()

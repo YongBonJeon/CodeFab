@@ -8,9 +8,20 @@ import com.codefab.token.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Static semantic analysis pass. Two responsibilities:
+ *
+ * <ol>
+ *   <li>Reports semantic errors (duplicate declarations, self-reference in an initializer, return
+ *       outside a function, duplicate parameters).
+ *   <li>Pre-computes the scope <em>distance</em> for every resolved local variable so the executor
+ *       can use static binding (O(1) access) instead of walking the scope chain at runtime.
+ * </ol>
+ */
 public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Deque<Map<String, Boolean>> scopes = new ArrayDeque<>();
@@ -19,8 +30,18 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         beginScope();
     }
 
+    /** Resolved variable -> number of enclosing scopes to hop to reach its declaration. */
+    private final Map<Expr, Integer> locals = new IdentityHashMap<>();
+
+    private boolean inFunction = false;
+
     public void check(List<Stmt> statements) {
         for (Stmt s : statements) resolve(s);
+    }
+
+    /** Scope distances computed during {@link #check}. Empty until {@code check} has run. */
+    public Map<Expr, Integer> getLocals() {
+        return locals;
     }
 
     private void resolve(Stmt stmt) {
@@ -52,6 +73,19 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         scopes.peek().put(name.origin, Boolean.TRUE);
     }
 
+    /** Records how many scopes up {@code name} is declared, so the executor can bind statically. */
+    private void resolveLocal(Expr expr, String name) {
+        int distance = 0;
+        for (Map<String, Boolean> scope : scopes) {
+            if (scope.containsKey(name)) {
+                locals.put(expr, distance);
+                return;
+            }
+            distance++;
+        }
+        // Not found in any local scope -> treated as a global, resolved dynamically at runtime.
+    }
+
     @Override
     public Void visitBlock(Stmt.Block stmt) {
         beginScope();
@@ -65,6 +99,38 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name);
         if (stmt.initializer != null) resolve(stmt.initializer);
         define(stmt.name);
+        return null;
+    }
+
+    @Override
+    public Void visitFunction(Stmt.Function stmt) {
+        // Declare the function name in the current scope first so recursion resolves.
+        declare(stmt.name);
+        define(stmt.name);
+
+        boolean enclosingInFunction = inFunction;
+        inFunction = true;
+        beginScope();
+        for (Token param : stmt.params) {
+            if (scopes.peek().containsKey(param.origin)) {
+                throw new SemanticError(param.line,
+                        "'" + param.origin + "' 에러: 파라미터 이름이 중복되었습니다.");
+            }
+            declare(param);
+            define(param);
+        }
+        for (Stmt s : stmt.body) resolve(s);
+        endScope();
+        inFunction = enclosingInFunction;
+        return null;
+    }
+
+    @Override
+    public Void visitReturn(Stmt.Return stmt) {
+        if (!inFunction) {
+            throw new SemanticError(stmt.keyword.line, "함수 외부에서는 return 을 사용할 수 없습니다.");
+        }
+        if (stmt.value != null) resolve(stmt.value);
         return null;
     }
 
@@ -109,12 +175,14 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (Boolean.FALSE.equals(scopes.peek().get(expr.name.origin))) {
             throw new SemanticError(expr.name.line, "자신의 초기화식에서 지역변수를 읽을 수 없습니다.");
         }
+        resolveLocal(expr, expr.name.origin);
         return null;
     }
 
     @Override
     public Void visitAssign(Expr.Assign expr) {
         resolve(expr.value);
+        resolveLocal(expr, expr.name.origin);
         return null;
     }
 
@@ -141,6 +209,28 @@ public class Checker implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitGrouping(Expr.Grouping expr) {
         resolve(expr.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitCall(Expr.Call expr) {
+        resolve(expr.callee);
+        for (Expr argument : expr.arguments) resolve(argument);
+        return null;
+    }
+
+    @Override
+    public Void visitIndex(Expr.Index expr) {
+        resolve(expr.target);
+        resolve(expr.index);
+        return null;
+    }
+
+    @Override
+    public Void visitIndexSet(Expr.IndexSet expr) {
+        resolve(expr.target);
+        resolve(expr.index);
+        resolve(expr.value);
         return null;
     }
 }

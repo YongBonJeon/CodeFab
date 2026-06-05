@@ -43,4 +43,38 @@ public class Environment {
     throw new ExecutionError(name.line, "미정의된 변수 '" + name.origin + "'");
   }
 
+  // ── Static binding (optimization) ──────────────────────────────────────────
+  // When the Checker has pre-computed the distance to a variable's scope, the
+  // executor can hop straight there in O(1) instead of walking the chain.
+
+  /** Returns the environment {@code distance} hops up the enclosing chain. */
+  public Environment ancestor(int distance) {
+    Environment environment = this;
+    for (int i = 0; i < distance; i++) {
+      environment = environment.enclosing;
+    }
+    return environment;
+  }
+
+  public Object getAt(int distance, String name) {
+    return ancestor(distance).values.get(name);
+  }
+
+  public void assignAt(int distance, Token name, Object value) {
+    ancestor(distance).values.put(name.origin, value);
+  }
+
+  // ── Introspection (debug shell) ────────────────────────────────────────────
+
+  public Environment enclosing() {
+    return enclosing;
+  }
+
+  public boolean containsLocally(String name) {
+    return values.containsKey(name);
+  }
+
+  public Map<String, Object> values() {
+    return values;
+  }
 }
