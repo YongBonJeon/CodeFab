@@ -135,4 +135,25 @@ class ArrayTest {
                 () -> executor.execute(List.of(arrDecl, print)));
         assertTrue(error.getMessage().contains("범위"));
     }
+
+    // ── Cycle 5: 숫자가 아닌 인덱스 ──────────────────────────────────────
+
+    @Test
+    @DisplayName("[visitIndex] FAIL - 숫자가 아닌 인덱스는 ExecutionError")
+    void visitIndex_FAIL_숫자가_아닌_인덱스는_에러() {
+        // Arrange
+        Token arrToken = token(TokenType.IDENTIFIER, "arr");
+        Token bracket = token(TokenType.LEFT_BRACKET, "[");
+
+        Stmt arrDecl = new Stmt.VarDeclare(arrToken, new Expr.Literal(new CodeFabArray(3)));
+        Stmt print = new Stmt.Print(new Expr.Index(
+                new Expr.Variable(arrToken),
+                bracket,
+                new Expr.Literal("hello")));
+
+        // Act & Assert
+        ExecutionError error = assertThrows(ExecutionError.class,
+                () -> executor.execute(List.of(arrDecl, print)));
+        assertTrue(error.getMessage().contains("인덱스"));
+    }
 }
