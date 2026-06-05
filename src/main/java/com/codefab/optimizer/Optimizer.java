@@ -32,7 +32,9 @@ public class Optimizer implements Expr.Visitor<Expr>, Stmt.Visitor<Stmt> {
   }
 
   private Stmt opt(Stmt stmt) {
-    return stmt.accept(this);
+    Stmt result = stmt.accept(this);
+    result.line = stmt.line;
+    return result;
   }
 
   private Expr opt(Expr expr) {
