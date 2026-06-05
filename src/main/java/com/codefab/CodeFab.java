@@ -6,6 +6,7 @@ import com.codefab.ast.Stmt;
 import com.codefab.checker.Checker;
 import com.codefab.error.CodeFabError;
 import com.codefab.executor.Executor;
+import com.codefab.optimizer.Optimizer;
 import com.codefab.token.Token;
 
 import java.io.PrintStream;
@@ -14,6 +15,7 @@ import java.util.List;
 public class CodeFab {
 
   private final Checker checker;
+  private final Optimizer optimizer;
   private final Executor executor;
   private final PrintStream err;
 
@@ -23,6 +25,7 @@ public class CodeFab {
 
   public CodeFab(PrintStream out, PrintStream err) {
     this.checker = new Checker();
+    this.optimizer = new Optimizer();
     this.executor = new Executor(out);
     this.err = err;
   }
@@ -32,6 +35,7 @@ public class CodeFab {
       List<Token> tokens = new Tokenizer(source).tokenize();
       List<Stmt> stmts = new Parser(tokens).parse();
       checker.check(stmts);
+      stmts = optimizer.optimize(stmts);
       executor.resolve(checker.getLocals());
       executor.execute(stmts);
       return true;
