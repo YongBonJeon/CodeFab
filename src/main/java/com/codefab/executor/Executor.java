@@ -16,6 +16,8 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   private Environment environment;
   private final PrintStream out;
   private Map<Expr, Integer> locals = new HashMap<>();
+  private ExecutionListener listener;
+  private int depth = 0;
 
   public Executor(PrintStream out) {
     this.out = out;
@@ -53,7 +55,16 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   private void execute(Stmt stmt) {
+    if (listener != null) listener.beforeStatement(stmt, depth);
     stmt.accept(this);
+  }
+
+  public void setListener(ExecutionListener listener) {
+    this.listener = listener;
+  }
+
+  public Environment currentEnvironment() {
+    return environment;
   }
 
   private Object evaluate(Expr expr) {
@@ -63,12 +74,14 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   void executeBlock(List<Stmt> statements, Environment newEnvironment) {
     Environment previous = this.environment;
     this.environment = newEnvironment;
+    this.depth++;
     try {
       for (Stmt stmt : statements) {
         execute(stmt);
       }
     } finally {
       this.environment = previous;
+      this.depth--;
     }
   }
 

@@ -5,6 +5,9 @@ import java.util.List;
 
 public abstract class Stmt {
 
+  /** Source line where this statement begins. Used by the debug shell for breakpoints/stepping. */
+  public int line = 0;
+
   public interface Visitor<R> {
     R visitExpression(Expression stmt);
 

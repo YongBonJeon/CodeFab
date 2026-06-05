@@ -14,8 +14,6 @@ import java.util.List;
 
 public class CodeFab {
 
-  private final Checker checker;
-  private final Optimizer optimizer;
   private final Executor executor;
   private final PrintStream err;
 
@@ -24,24 +22,35 @@ public class CodeFab {
   }
 
   public CodeFab(PrintStream out, PrintStream err) {
-    this.checker = new Checker();
-    this.optimizer = new Optimizer();
     this.executor = new Executor(out);
     this.err = err;
   }
 
+  public Executor getExecutor() {
+    return executor;
+  }
+
   public boolean run(String source) {
     try {
-      List<Token> tokens = new Tokenizer(source).tokenize();
-      List<Stmt> stmts = new Parser(tokens).parse();
-      stmts = optimizer.optimize(stmts);
-      checker.check(stmts);
-      executor.resolve(checker.getLocals());
-      executor.execute(stmts);
+      execute(compile(source));
       return true;
     } catch (CodeFabError e) {
       err.println(e.formatted());
       return false;
     }
+  }
+
+  public List<Stmt> compile(String source) {
+    List<Token> tokens = new Tokenizer(source).tokenize();
+    List<Stmt> stmts = new Parser(tokens).parse();
+    stmts = new Optimizer().optimize(stmts);
+    Checker checker = new Checker();
+    checker.check(stmts);
+    executor.resolve(checker.getLocals());
+    return stmts;
+  }
+
+  public void execute(List<Stmt> statements) {
+    executor.execute(statements);
   }
 }
