@@ -6,6 +6,7 @@ import com.codefab.error.ExecutionError;
 import com.codefab.token.Token;
 import com.codefab.token.TokenType;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
@@ -60,7 +61,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitVarDeclare(Stmt.VarDeclare stmt) {
-    Object value = evaluate(stmt.initializer);
+    Object value = stmt.initializer != null ? evaluate(stmt.initializer) : null;
     environment.define(stmt.name.origin, value);
     return null;
   }
@@ -87,7 +88,7 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     this.environment = new Environment(previous);
     try {
       if (stmt.initializer != null) execute(stmt.initializer);
-      while (isTruthy(evaluate(stmt.condition))) {
+      while (stmt.condition == null || isTruthy(evaluate(stmt.condition))) {
         execute(stmt.body);
         if (stmt.increment != null) evaluate(stmt.increment);
       }
@@ -95,6 +96,19 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       this.environment = previous;
     }
     return null;
+  }
+
+  @Override
+  public Void visitFunction(Stmt.Function stmt) {
+    CodeFabFunction function = new CodeFabFunction(stmt, environment);
+    environment.define(stmt.name.origin, function);
+    return null;
+  }
+
+  @Override
+  public Void visitReturn(Stmt.Return stmt) {
+    Object value = stmt.value != null ? evaluate(stmt.value) : null;
+    throw new Return(value);
   }
 
   // ── Expr Visitors ────────────────────────────────────────────────────────
@@ -117,6 +131,23 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Object visitCall(Expr.Call expr) {
+    Object callee = evaluate(expr.callee);
+    List<Object> arguments = new ArrayList<>();
+    for (Expr argument : expr.arguments) {
+      arguments.add(evaluate(argument));
+    }
+    if (!(callee instanceof CodeFabCallable callable)) {
+      throw new ExecutionError(expr.paren.line, "함수만 호출할 수 있습니다.");
+    }
+    if (arguments.size() != callable.arity()) {
+      throw new ExecutionError(expr.paren.line,
+          "인자 개수가 일치하지 않습니다. " + callable.arity() + "개를 기대했지만 " + arguments.size() + "개가 전달되었습니다.");
+    }
+    return callable.call(this, arguments, expr.paren);
+  }
+
+  @Override
   public Object visitBinary(Expr.Binary expr) {
     Object leftVal = evaluate(expr.left);
     Object rightVal = evaluate(expr.right);
@@ -124,6 +155,12 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       if (leftVal instanceof String l && rightVal instanceof String r) {
         return l + r;
       }
+    }
+    if (expr.operator.type == TokenType.EQUAL_EQUAL) {
+      return isEqual(leftVal, rightVal);
+    }
+    if (expr.operator.type == TokenType.BANG_EQUAL) {
+      return !isEqual(leftVal, rightVal);
     }
     checkNumberOperands(leftVal, rightVal, expr.operator);
     double left = (double) leftVal;
@@ -137,7 +174,9 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         yield left / right;
       }
       case GREATER -> left > right;
+      case GREATER_EQUAL -> left >= right;
       case LESS -> left < right;
+      case LESS_EQUAL -> left <= right;
       default -> throw new UnsupportedOperationException("지원하지 않는 연산자: " + expr.operator.type);
     };
   }
@@ -216,6 +255,12 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     if (!(left instanceof Double) || !(right instanceof Double)) {
       throw new ExecutionError(operator.line, "피연산자는 숫자여야 합니다");
     }
+  }
+
+  private boolean isEqual(Object a, Object b) {
+    if (a == null && b == null) return true;
+    if (a == null) return false;
+    return a.equals(b);
   }
 
   private boolean isTruthy(Object value) {

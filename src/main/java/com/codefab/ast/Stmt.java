@@ -17,6 +17,10 @@ public abstract class Stmt {
     R visitIf(If stmt);
 
     R visitFor(For stmt);
+
+    R visitFunction(Function stmt);
+
+    R visitReturn(Return stmt);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -108,6 +112,40 @@ public abstract class Stmt {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitFor(this);
+    }
+  }
+
+  /** Function declaration: {@code Func name(params) { body }}. */
+  public static final class Function extends Stmt {
+    public final Token name;
+    public final List<Token> params;
+    public final List<Stmt> body;
+
+    public Function(Token name, List<Token> params, List<Stmt> body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitFunction(this);
+    }
+  }
+
+  /** Return statement: {@code return;} or {@code return value;}. */
+  public static final class Return extends Stmt {
+    public final Token keyword;
+    public final Expr value;
+
+    public Return(Token keyword, Expr value) {
+      this.keyword = keyword;
+      this.value = value;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitReturn(this);
     }
   }
 }
