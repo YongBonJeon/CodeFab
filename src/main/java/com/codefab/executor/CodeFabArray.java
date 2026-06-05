@@ -14,4 +14,8 @@ public class CodeFabArray {
     public Object get(int index) {
         return elements[index];
     }
+
+    public void set(int index, Object value) {
+        elements[index] = value;
+    }
 }

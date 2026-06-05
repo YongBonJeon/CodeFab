@@ -179,7 +179,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitIndexSet(Expr.IndexSet expr) {
-    throw new UnsupportedOperationException("visitIndexSet 미구현");
+    CodeFabArray array = (CodeFabArray) evaluate(expr.target);
+    int index = (int) (double) evaluate(expr.index);
+    Object value = evaluate(expr.value);
+    array.set(index, value);
+    return value;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
