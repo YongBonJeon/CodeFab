@@ -32,15 +32,15 @@ public class FactoryShell {
     }
     FileRunner fileRunner = new FileRunner(out, err);
     return switch (args[0]) {
-      case "run" -> requireFile(args, "run") ? fileRunner.run(args[1]) : 64;
-      case "debug" -> requireFile(args, "debug") ? debug(args[1]) : 64;
+      case "run" -> requireFile(args) ? fileRunner.run(args[1]) : 64;
+      case "debug" -> requireFile(args) ? debug(args[1]) : 64;
       default -> fileRunner.run(args[0]);
     };
   }
 
-  private boolean requireFile(String[] args, String cmd) {
+  private boolean requireFile(String[] args) {
     if (args.length < 2) {
-      err.println("[오류] 파일 경로가 필요합니다. 사용법: factory " + cmd + " <파일경로>");
+      err.println("[오류] 파일 경로가 필요합니다. 사용법: factory " + args[0] + " <파일경로>");
       return false;
     }
     return true;
