@@ -10,14 +10,20 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.TreeSet;
 
 public class Debugger implements ExecutionListener {
+
+  private enum Mode { STEP, CONTINUE }
 
   private final CodeFab fab;
   private final Executor executor;
   private final BufferedReader in;
   private final PrintStream out;
   private final String[] sourceLines;
+
+  private final TreeSet<Integer> breakpoints = new TreeSet<>();
+  private Mode mode = Mode.STEP;
 
   public Debugger(String source, BufferedReader in, PrintStream out) {
     this.fab = new CodeFab(out, out);
@@ -47,7 +53,12 @@ public class Debugger implements ExecutionListener {
 
   @Override
   public void beforeStatement(Stmt stmt, int depth) {
-    out.println("[DEBUG] " + stmt.line + "번째 줄에서 정지 → " + sourceText(stmt.line));
+    boolean atBreakpoint = breakpoints.contains(stmt.line);
+    boolean pauseByStep = mode == Mode.STEP;
+    if (!pauseByStep && !atBreakpoint) return;
+
+    String marker = (atBreakpoint && !pauseByStep) ? " (breakpoint)" : "";
+    out.println("[DEBUG] " + stmt.line + "번째 줄에서 정지" + marker + " → " + sourceText(stmt.line));
     readCommands();
   }
 
@@ -56,10 +67,22 @@ public class Debugger implements ExecutionListener {
       out.print("> ");
       out.flush();
       String line = readLine();
-      if (line == null || line.trim().equals("step")) {
-        return;
+      if (line == null) return;
+      String[] parts = line.trim().split("\\s+");
+      switch (parts[0]) {
+        case "step" -> { mode = Mode.STEP; return; }
+        case "continue" -> { mode = Mode.CONTINUE; return; }
+        case "break" -> setBreakpoint(parts);
+        default -> { }
       }
     }
+  }
+
+  private void setBreakpoint(String[] parts) {
+    if (parts.length < 2) return;
+    int lineNo = Integer.parseInt(parts[1]);
+    breakpoints.add(lineNo);
+    out.println("[DEBUG] " + lineNo + "번째 줄에 breakpoint 설정");
   }
 
   private String sourceText(int line) {
