@@ -20,7 +20,7 @@ import java.util.TreeSet;
 
 public class Debugger implements ExecutionListener {
 
-  private enum Mode { STEP, CONTINUE }
+  private enum Mode { STEP, NEXT, CONTINUE }
 
   private final CodeFab fab;
   private final Executor executor;
@@ -31,6 +31,7 @@ public class Debugger implements ExecutionListener {
   private final TreeSet<Integer> breakpoints = new TreeSet<>();
   private final Set<String> watches = new LinkedHashSet<>();
   private Mode mode = Mode.STEP;
+  private int nextDepthLimit = 0;
 
   public Debugger(String source, BufferedReader in, PrintStream out) {
     this.fab = new CodeFab(out, out);
@@ -61,16 +62,16 @@ public class Debugger implements ExecutionListener {
   @Override
   public void beforeStatement(Stmt stmt, int depth) {
     boolean atBreakpoint = breakpoints.contains(stmt.line);
-    boolean pauseByStep = mode == Mode.STEP;
+    boolean pauseByStep = mode == Mode.STEP || (mode == Mode.NEXT && depth <= nextDepthLimit);
     if (!pauseByStep && !atBreakpoint) return;
 
     String marker = (atBreakpoint && !pauseByStep) ? " (breakpoint)" : "";
     out.println("[DEBUG] " + stmt.line + "번째 줄에서 정지" + marker + " → " + sourceText(stmt.line));
     printWatches();
-    readCommands();
+    readCommands(depth);
   }
 
-  private void readCommands() {
+  private void readCommands(int depth) {
     while (true) {
       out.print("> ");
       out.flush();
@@ -79,6 +80,7 @@ public class Debugger implements ExecutionListener {
       String[] parts = line.trim().split("\\s+");
       switch (parts[0]) {
         case "step" -> { mode = Mode.STEP; return; }
+        case "next" -> { mode = Mode.NEXT; nextDepthLimit = depth; return; }
         case "continue" -> { mode = Mode.CONTINUE; return; }
         case "break" -> setBreakpoint(parts);
         case "watch" -> addWatch(parts);
