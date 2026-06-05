@@ -18,6 +18,8 @@ public abstract class Expr {
     R visitLogical(Logical expr);
 
     R visitGrouping(Grouping expr);
+
+    R visitIndex(Index expr);
   }
 
   public abstract <R> R accept(Visitor<R> visitor);
@@ -122,6 +124,23 @@ public abstract class Expr {
     @Override
     public <R> R accept(Visitor<R> v) {
       return v.visitGrouping(this);
+    }
+  }
+
+  public static final class Index extends Expr {
+    public final Expr target;
+    public final Token bracket;
+    public final Expr index;
+
+    public Index(Expr target, Token bracket, Expr index) {
+      this.target = target;
+      this.bracket = bracket;
+      this.index = index;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> v) {
+      return v.visitIndex(this);
     }
   }
 }
