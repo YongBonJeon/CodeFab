@@ -186,7 +186,11 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   private int indexOf(Expr indexExpr, Token bracket, CodeFabArray array) {
-    int index = (int) (double) evaluate(indexExpr);
+    Object raw = evaluate(indexExpr);
+    if (!(raw instanceof Double d) || d != Math.floor(d)) {
+      throw new ExecutionError(bracket.line, "배열 인덱스는 정수여야 합니다.");
+    }
+    int index = (int) (double) d;
     if (index < 0 || index >= array.size()) {
       throw new ExecutionError(bracket.line,
           "배열 인덱스 " + index + " 가 범위를 벗어났습니다. (크기: " + array.size() + ")");
