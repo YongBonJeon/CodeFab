@@ -156,4 +156,25 @@ class ArrayTest {
                 () -> executor.execute(List.of(arrDecl, print)));
         assertTrue(error.getMessage().contains("인덱스"));
     }
+
+    // ── Cycle 6: 배열이 아닌 대상에 인덱스 접근 ──────────────────────────
+
+    @Test
+    @DisplayName("[visitIndex] FAIL - 배열이 아닌 대상에 인덱스 접근하면 ExecutionError")
+    void visitIndex_FAIL_배열이_아닌_대상에_인덱스_접근은_에러() {
+        // Arrange
+        Token xToken = token(TokenType.IDENTIFIER, "x");
+        Token bracket = token(TokenType.LEFT_BRACKET, "[");
+
+        Stmt xDecl = new Stmt.VarDeclare(xToken, new Expr.Literal(10.0));
+        Stmt print = new Stmt.Print(new Expr.Index(
+                new Expr.Variable(xToken),
+                bracket,
+                new Expr.Literal(0.0)));
+
+        // Act & Assert
+        ExecutionError error = assertThrows(ExecutionError.class,
+                () -> executor.execute(List.of(xDecl, print)));
+        assertTrue(error.getMessage().contains("배열"));
+    }
 }
