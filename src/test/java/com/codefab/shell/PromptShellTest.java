@@ -22,11 +22,12 @@ class PromptShellTest {
         CodeFab fab = new CodeFab(out, out);
         new PromptShell(fab, reader, out).run();
         return outStream.toString(StandardCharsets.UTF_8)
-                .replaceAll("CodeFab.*\\n", "")  // 배너 제거
-                .replaceAll("\\(.*\\)\\n", "")   // 안내 메시지 제거
-                .replaceAll(">>>.*|\\.\\.\\. ", "") // 프롬프트 제거
-                .trim()
-                .replace("\r\n", "\n");
+                .replace("\r\n", "\n")
+                .replaceAll("CodeFab[^\n]*\n", "")  // 배너 라인 제거
+                .replaceAll("\\([^\n]*\\)\n", "")   // 안내 메시지 라인 제거
+                .replace(">>> ", "")                 // >>> 프롬프트 제거
+                .replace("... ", "")                 // ... 프롬프트 제거
+                .trim();
     }
 
     // ── Cycle 7: 멀티라인 버퍼 실행 ──────────────────────────────────────
