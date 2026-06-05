@@ -12,14 +12,20 @@ import java.util.List;
 import java.util.Map;
 
 public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-  private final Environment globals = new Environment();
-  private Environment environment = globals;
+  private final Environment globals;
+  private Environment environment;
   private final PrintStream out;
   private Map<Expr, Integer> locals = new HashMap<>();
 
   public Executor(PrintStream out) {
     this.out = out;
     defineNatives();
+  private Map<Expr, Integer> locals = new java.util.HashMap<>();
+
+  public Executor(PrintStream out) {
+    this.out = out;
+    this.globals = new Environment();
+    this.environment = globals;
   }
 
   public void resolve(Map<Expr, Integer> locals) {
@@ -146,13 +152,22 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visitVariable(Expr.Variable expr) {
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      return environment.getAt(distance, expr.name.origin);
+    }
     return environment.get(expr.name);
   }
 
   @Override
   public Object visitAssign(Expr.Assign expr) {
     Object value = evaluate(expr.value);
-    environment.assign(expr.name, value);
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      environment.assignAt(distance, expr.name, value);
+    } else {
+      environment.assign(expr.name, value);
+    }
     return value;
   }
 
@@ -198,6 +213,10 @@ public class Executor implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       case SLASH -> {
         if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
         yield left / right;
+      }
+      case PERCENT -> {
+        if (right == 0) throw new ExecutionError(expr.operator.line, "0으로 나눌 수 없습니다");
+        yield left % right;
       }
       case GREATER -> left > right;
       case GREATER_EQUAL -> left >= right;
