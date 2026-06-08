@@ -1,0 +1,29 @@
+// RUN 모드 데모 - 버블 정렬
+
+var arr = Array(6);
+arr[0] = 64;
+arr[1] = 34;
+arr[2] = 25;
+arr[3] = 12;
+arr[4] = 22;
+arr[5] = 11;
+
+print "=== 정렬 전 ===";
+for (var i = 0; i < 6; i = i + 1) {
+    print arr[i];
+}
+
+for (var i = 0; i < 6; i = i + 1) {
+    for (var j = 0; j < 6 - i - 1; j = j + 1) {
+        if (arr[j] > arr[j + 1]) {
+            var tmp = arr[j];
+            arr[j] = arr[j + 1];
+            arr[j + 1] = tmp;
+        }
+    }
+}
+
+print "=== 정렬 후 ===";
+for (var i = 0; i < 6; i = i + 1) {
+    print arr[i];
+}
