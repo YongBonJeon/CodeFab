@@ -41,21 +41,56 @@ public class Debugger implements ExecutionListener {
     this.sourceLines = source.split("\n", -1);
   }
 
+  private void printDebugBanner() {
+    out.println(Ansi.YELLOW + Ansi.BOLD
+        + "┌─────────────────────────────────────────────┐" + Ansi.RESET);
+    out.println(Ansi.YELLOW + Ansi.BOLD
+        + "│  CodeFab Debugger  |  help 로 명령어 확인   │" + Ansi.RESET);
+    out.println(Ansi.YELLOW + Ansi.BOLD
+        + "└─────────────────────────────────────────────┘" + Ansi.RESET);
+  }
+
+  private void printHelp() {
+    out.println(Ansi.BOLD + "┌──────────────────────────────────────────────┐" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│  Debugger 명령어                             │" + Ansi.RESET);
+    out.println(Ansi.BOLD + "├──────────────────────────────────────────────┤" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  step             한 줄씩 실행               " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  next             블록 내부 진입 없이 다음    " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  continue         다음 breakpoint 까지 실행  " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  break <줄>       breakpoint 설정            " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  remove <줄>      breakpoint 해제            " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  breakpoints      breakpoint 목록 출력       " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  watch <변수>     변수 감시 등록             " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  unwatch <변수>   감시 해제                  " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  watches          감시 목록 출력             " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "│" + Ansi.RESET + "  inspect          현재 스코프 변수 출력      " + Ansi.BOLD + "│" + Ansi.RESET);
+    out.println(Ansi.BOLD + "└──────────────────────────────────────────────┘" + Ansi.RESET);
+  }
+
+  private String dbg(String msg) {
+    return Ansi.YELLOW + "[DEBUG]" + Ansi.RESET + " " + msg;
+  }
+
+  private String watch(String msg) {
+    return Ansi.GREEN + "[WATCH]" + Ansi.RESET + " " + msg;
+  }
+
   public void run(String source, String path) {
-    out.println("[DEBUG] 소스코드 로딩: " + path);
+    out.println(dbg("소스코드 로딩: " + Ansi.BOLD + path + Ansi.RESET));
     List<Stmt> program;
     try {
       program = fab.compile(source);
     } catch (CodeFabError e) {
-      out.println("[DEBUG] " + e.formatted());
+      out.println(Ansi.RED + "[DEBUG] " + e.formatted() + Ansi.RESET);
       return;
     }
+    printDebugBanner();
     executor.setListener(this);
     try {
       fab.execute(program);
-      out.println("[DEBUG] 실행 종료");
+      out.println(dbg(Ansi.GREEN + "실행 종료" + Ansi.RESET));
     } catch (CodeFabError e) {
-      out.println("[DEBUG] " + e.formatted());
+      out.println(Ansi.RED + "[DEBUG] " + e.formatted() + Ansi.RESET);
     }
   }
 
@@ -65,15 +100,17 @@ public class Debugger implements ExecutionListener {
     boolean pauseByStep = mode == Mode.STEP || (mode == Mode.NEXT && depth <= nextDepthLimit);
     if (!pauseByStep && !atBreakpoint) return;
 
-    String marker = (atBreakpoint && !pauseByStep) ? " (breakpoint)" : "";
-    out.println("[DEBUG] " + stmt.line + "번째 줄에서 정지" + marker + " → " + sourceText(stmt.line));
+    String marker = (atBreakpoint && !pauseByStep)
+        ? Ansi.RED + " (breakpoint)" + Ansi.RESET : "";
+    out.println(dbg(Ansi.BOLD + stmt.line + "번째 줄에서 정지" + Ansi.RESET
+        + marker + " → " + Ansi.WHITE + sourceText(stmt.line) + Ansi.RESET));
     printWatches();
     readCommands(depth);
   }
 
   private void readCommands(int depth) {
     while (true) {
-      out.print("> ");
+      out.print(Ansi.CYAN + "> " + Ansi.RESET);
       out.flush();
       String line = readLine();
       if (line == null) return;
@@ -89,13 +126,14 @@ public class Debugger implements ExecutionListener {
         case "unwatch" -> removeWatch(parts);
         case "watches" -> printWatches();
         case "inspect" -> inspect();
-        default -> { }
+        case "help" -> printHelp();
+        default -> out.println(dbg("알 수 없는 명령입니다. " + Ansi.GRAY + "(help 로 명령어 목록 확인)" + Ansi.RESET));
       }
     }
   }
 
   private void inspect() {
-    out.println("──── 현재 스코프 변수 ────");
+    out.println(Ansi.BOLD + "──── 현재 스코프 변수 ────" + Ansi.RESET);
     Map<String, Object> seen = new LinkedHashMap<>();
     for (Environment env = executor.currentEnvironment(); env != null; env = env.enclosing()) {
       boolean isGlobal = env.enclosing() == null;
@@ -112,25 +150,26 @@ public class Debugger implements ExecutionListener {
   private void removeWatch(String[] parts) {
     if (parts.length < 2) return;
     if (watches.remove(parts[1])) {
-      out.println("[WATCH] '" + parts[1] + "' 감시 해제");
+      out.println(watch("'" + parts[1] + "' 감시 해제"));
     } else {
-      out.println("[WATCH] '" + parts[1] + "' 는 감시 목록에 없습니다.");
+      out.println(watch("'" + parts[1] + "' 는 감시 목록에 없습니다."));
     }
   }
 
   private void addWatch(String[] parts) {
     if (parts.length < 2) return;
     watches.add(parts[1]);
-    out.println("[WATCH] '" + parts[1] + "' 감시 등록");
+    out.println(watch("'" + parts[1] + "' 감시 등록"));
   }
 
   private void printWatches() {
     for (String name : watches) {
       Environment env = findDefiningScope(name);
       if (env == null) {
-        out.println("[WATCH] " + name + " = (정의되지 않음)");
+        out.println(watch(name + " = " + Ansi.GRAY + "(정의되지 않음)" + Ansi.RESET));
       } else {
-        out.println("[WATCH] " + name + " = " + stringify(env.values().get(name)));
+        out.println(watch(Ansi.BOLD + name + Ansi.RESET + " = "
+            + Ansi.GREEN + stringify(env.values().get(name)) + Ansi.RESET));
       }
     }
   }
@@ -153,9 +192,9 @@ public class Debugger implements ExecutionListener {
 
   private void listBreakpoints() {
     if (breakpoints.isEmpty()) {
-      out.println("[DEBUG] 설정된 breakpoint 가 없습니다.");
+      out.println(dbg("설정된 breakpoint 가 없습니다."));
     } else {
-      out.println("[DEBUG] breakpoints: " + breakpoints);
+      out.println(dbg(Ansi.RED + "breakpoints: " + breakpoints + Ansi.RESET));
     }
   }
 
@@ -163,9 +202,9 @@ public class Debugger implements ExecutionListener {
     Integer lineNo = parseLine(parts);
     if (lineNo == null) return;
     if (breakpoints.remove(lineNo)) {
-      out.println("[DEBUG] " + lineNo + "번째 줄 breakpoint 해제");
+      out.println(dbg(lineNo + "번째 줄 breakpoint 해제"));
     } else {
-      out.println("[DEBUG] " + lineNo + "번째 줄에 breakpoint 가 없습니다.");
+      out.println(dbg(lineNo + "번째 줄에 breakpoint 가 없습니다."));
     }
   }
 
@@ -173,7 +212,7 @@ public class Debugger implements ExecutionListener {
     Integer lineNo = parseLine(parts);
     if (lineNo == null) return;
     breakpoints.add(lineNo);
-    out.println("[DEBUG] " + lineNo + "번째 줄에 breakpoint 설정");
+    out.println(dbg(Ansi.RED + lineNo + "번째 줄에 breakpoint 설정" + Ansi.RESET));
   }
 
   private Integer parseLine(String[] parts) {
