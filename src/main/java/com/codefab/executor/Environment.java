@@ -59,4 +59,17 @@ public class Environment {
     return env;
   }
 
+  // ── Introspection (debug shell) ───────────────────────────────────────────
+
+  public Environment enclosing() {
+    return enclosing;
+  }
+
+  public boolean containsLocally(String name) {
+    return values.containsKey(name);
+  }
+
+  public Map<String, Object> values() {
+    return values;
+  }
 }
