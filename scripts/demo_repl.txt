@@ -1,0 +1,60 @@
+// =============================================
+//  REPL 모드 데모
+//  factory 실행 후 [1] REPL 선택
+//  아래 코드를 단계별로 직접 입력해보세요
+//  여러 줄 입력 후 빈 줄(엔터)로 실행됩니다
+// =============================================
+
+// [Step 1] 기본 연산과 출력
+print 2 + 3 * 4;
+print 10 / 4;
+print "Hello, " + "CodeFab!";
+
+// [Step 2] 변수 선언과 재할당
+var x = 10;
+var y = 3;
+print x + y;
+x = x * 2;
+print x;
+
+// [Step 3] 조건문
+var score = 87;
+if (score >= 90) {
+    print "A";
+} else {
+    if (score >= 80) {
+        print "B";
+    } else {
+        print "C";
+    }
+}
+
+// [Step 4] 반복문으로 합계 구하기
+var total = 0;
+for (var i = 1; i <= 10; i = i + 1) {
+    total = total + i;
+}
+print total;
+
+// [Step 5] 함수 정의와 호출
+Func square(n) {
+    return n * n;
+}
+print square(5);
+print square(12);
+
+// [Step 6] 재귀 함수
+Func fact(n) {
+    if (n <= 1) return 1;
+    return n * fact(n - 1);
+}
+print fact(5);
+print fact(10);
+
+// [Step 7] 배열 활용
+var arr = Array(5);
+for (var i = 0; i < 5; i = i + 1) {
+    arr[i] = (i + 1) * 10;
+}
+print arr[0];
+print arr[4];

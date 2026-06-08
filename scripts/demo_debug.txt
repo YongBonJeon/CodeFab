@@ -1,0 +1,17 @@
+// DEBUG 모드 데모 - 팩토리얼 재귀
+// fact(5) = 5 * 4 * 3 * 2 * 1 = 120
+//
+// 추천 시나리오:
+//   break 14   → return 직전, step 과 sub 가 모두 채워진 상태
+//   continue   → 다음 재귀 단계로
+//   watch step → 현재 n 값 관찰 (5 → 4 → 3 → 2)
+//   watch sub  → 누적 계산값 관찰 (1 → 2 → 6 → 24)
+
+Func fact(n) {
+    if (n <= 1) return 1;
+    var step = n;
+    var sub = fact(n - 1);
+    return step * sub;
+}
+
+print fact(5);
