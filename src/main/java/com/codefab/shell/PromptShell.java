@@ -33,18 +33,7 @@ public class PromptShell {
   }
 
   public void run() throws IOException {
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "  ____          _     _____       _     " + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + " / ___|___   __| |___|  ___|_ _  | |__  " + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "| |   / _ \\ / _` |/ _ \\ |_  / _` | '_ \\ " + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "| |__| (_) | (_| |  __/  _|| (_| | |_) |" + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + " \\____\\___/ \\__,_|\\___|_|   \\__,_|_.__/ " + Ansi.RESET);
-    out.println();
-    out.println(Ansi.GRAY + "  Interpreter v1.0  |  빈 줄로 실행  |  exit 로 종료" + Ansi.RESET);
+    out.println(Ansi.GRAY + "  빈 줄로 실행  |  exit 로 종료" + Ansi.RESET);
     out.println();
     StringBuilder buffer = new StringBuilder();
     while (true) {

@@ -1,0 +1,8 @@
+Func fact(n) {
+    if (n <= 1) return 1;
+    var step = n;
+    var sub = fact(n - 1);
+    return step * sub;
+}
+
+print fact(5);
