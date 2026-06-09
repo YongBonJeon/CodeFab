@@ -41,44 +41,73 @@ public class FactoryShell {
 
   private int interactiveMenu() throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "┌─────────────────────────────────────┐" + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "│   CodeFab Interpreter  v1.0         │" + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "├─────────────────────────────────────┤" + Ansi.RESET);
-    out.println(Ansi.CYAN + "│" + Ansi.RESET
-        + "  " + Ansi.BOLD + "[1]" + Ansi.RESET + " REPL   대화형 모드           "
-        + Ansi.CYAN + "│" + Ansi.RESET);
-    out.println(Ansi.CYAN + "│" + Ansi.RESET
-        + "  " + Ansi.BOLD + "[2]" + Ansi.RESET + " RUN    파일 실행 모드        "
-        + Ansi.CYAN + "│" + Ansi.RESET);
-    out.println(Ansi.CYAN + "│" + Ansi.RESET
-        + "  " + Ansi.BOLD + "[3]" + Ansi.RESET + " DEBUG  디버그 모드           "
-        + Ansi.CYAN + "│" + Ansi.RESET);
-    out.println(Ansi.CYAN + Ansi.BOLD
-        + "└─────────────────────────────────────┘" + Ansi.RESET);
-    out.print(Ansi.BOLD + "선택 (1/2/3): " + Ansi.RESET);
-    out.flush();
 
-    String choice = reader.readLine();
-    if (choice == null) return 0;
+    // Smokestacks
+    out.println(Ansi.GRAY + "      |  |                 |  |" + Ansi.RESET);
+    out.println(Ansi.GRAY + "      |  |                 |  |" + Ansi.RESET);
+    out.println(Ansi.GRAY + "  ____|  |_________________|  |________" + Ansi.RESET);
+    // Brand name (spaced letters - clear and unambiguous)
+    out.println(Ansi.GRAY + Ansi.BOLD
+        + "  |                                   |" + Ansi.RESET);
+    out.println(Ansi.CYAN + Ansi.BOLD
+        + "  |   C O D E F A B                   |" + Ansi.RESET);
+    out.println(Ansi.GRAY
+        + "  |   Interpreter Factory  v1.0       |" + Ansi.RESET);
+    out.println(Ansi.GRAY + Ansi.BOLD
+        + "  |                                   |" + Ansi.RESET);
+    // Factory floor
+    out.println(Ansi.GRAY + "  |___________________________________|" + Ansi.RESET);
+    out.println(Ansi.GRAY + "  |_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|_|" + Ansi.RESET);
+    out.println();
+    // Pipeline
+    out.print(  Ansi.YELLOW + " Assembler" + Ansi.RESET);
+    out.print(  Ansi.GRAY   + "  ──▶  " + Ansi.RESET);
+    out.print(  Ansi.YELLOW + "Checker" + Ansi.RESET);
+    out.print(  Ansi.GRAY   + "  ──▶  " + Ansi.RESET);
+    out.print(  Ansi.YELLOW + "Executor" + Ansi.RESET);
+    out.println();
 
-    return switch (choice.trim()) {
-      case "1" -> { new PromptShell().run(); yield 0; }
-      case "2" -> {
-        String path = pickFile(reader);
-        yield (path != null) ? new FileRunner(out, err).run(path) : 64;
+    while (true) {
+      out.println(Ansi.CYAN + Ansi.BOLD
+          + "┌─────────────────────────────────────┐" + Ansi.RESET);
+      out.println(Ansi.CYAN + Ansi.BOLD
+          + "│   Interpreter  v1.0                 │" + Ansi.RESET);
+      out.println(Ansi.CYAN + Ansi.BOLD
+          + "├─────────────────────────────────────┤" + Ansi.RESET);
+      out.println(Ansi.CYAN + "│" + Ansi.RESET
+          + "  " + Ansi.BOLD + "[1]" + Ansi.RESET + " REPL   대화형 모드             "
+          + Ansi.CYAN + "│" + Ansi.RESET);
+      out.println(Ansi.CYAN + "│" + Ansi.RESET
+          + "  " + Ansi.BOLD + "[2]" + Ansi.RESET + " RUN    파일 실행 모드          "
+          + Ansi.CYAN + "│" + Ansi.RESET);
+      out.println(Ansi.CYAN + "│" + Ansi.RESET
+          + "  " + Ansi.BOLD + "[3]" + Ansi.RESET + " DEBUG  디버그 모드             "
+          + Ansi.CYAN + "│" + Ansi.RESET);
+      out.println(Ansi.CYAN + "│" + Ansi.RESET
+          + "  " + Ansi.BOLD + "[0]" + Ansi.RESET + " 종료                           "
+          + Ansi.CYAN + "│" + Ansi.RESET);
+      out.println(Ansi.CYAN + Ansi.BOLD
+          + "└─────────────────────────────────────┘" + Ansi.RESET);
+      out.print(Ansi.BOLD + "선택 (0/1/2/3): " + Ansi.RESET);
+      out.flush();
+
+      String choice = reader.readLine();
+      if (choice == null) return 0;
+
+      switch (choice.trim()) {
+        case "0", "exit" -> { return 0; }
+        case "1" -> { out.println(); new PromptShell().run(); out.println(); }
+        case "2" -> {
+          String path = pickFile(reader);
+          if (path != null) { out.println(); new FileRunner(out, err).run(path); out.println(); }
+        }
+        case "3" -> {
+          String path = pickFile(reader);
+          if (path != null) { out.println(); debug(path); out.println(); }
+        }
+        default -> out.println(Ansi.RED + "잘못된 선택입니다." + Ansi.RESET);
       }
-      case "3" -> {
-        String path = pickFile(reader);
-        yield (path != null) ? debug(path) : 64;
-      }
-      default -> {
-        err.println(Ansi.RED + "잘못된 선택입니다." + Ansi.RESET);
-        yield 1;
-      }
-    };
+    }
   }
 
   private String pickFile(BufferedReader reader) throws IOException {
